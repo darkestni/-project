@@ -9,40 +9,40 @@ module IFetch (
     input jump,
     input zero,
     input [31:0] imm32,
-    input [31:0] jalr_target,
-    input [31:0] test_scenario,
+    input [31:0] jalrTarget,
+    input [31:0] testScenario,
     output reg [31:0] instruction,
     output reg [31:0] pc
 );
-
+    parameter RESET_PC = 32'h00000000;
     // PC 寄存器
-    reg [31:0] next_pc;
-    reg step_prev;
+    reg [31:0] nextPc;
+    reg stepPrev;
 
     // BRAM 指令存储器
-    wire [31:0] bram_instruction;
-    blk_mem_gen_0 inst_mem_bram (
+    wire [31:0] bramInstruction;
+    blk_mem_gen_0 instMemBram (
         .clka(clk),
         .wea(1'b0),               // 只读
         .addra(pc[11:2]),         // 地址（PC 索引）
         .dina(32'h0),             // 写数据（不使用）
-        .douta(bram_instruction), // 读数据（指令）
+        .douta(bramInstruction),  // 读数据（指令）
         .MUX_RST(reset)           // 连接复位信号
     );
 
     // PC 更新逻辑
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            pc <= 32'h00000000;
-            step_prev <= 0;
+            pc <= RESET_PC;
+            stepPrev <= 0;
         end else begin
-            step_prev <= step;
+            stepPrev <= step;
             if (debugMode) begin
-                if (step && !step_prev) begin // 检测 step 的上升沿
-                    pc <= next_pc;
+                if (step && !stepPrev) begin // 检测 step 的上升沿
+                    pc <= nextPc;
                 end
             end else begin
-                pc <= next_pc;
+                pc <= nextPc;
             end
         end
     end
@@ -50,24 +50,24 @@ module IFetch (
     // 计算下一条 PC
     always @(*) begin
         if (branch && zero) begin
-            next_pc = pc + imm32; // 分支跳转
+            nextPc = pc + imm32; // 分支跳转
         end else if (jump) begin
             if (imm32 != 32'd0) begin
-                next_pc = pc + imm32; // jal
+                nextPc = pc + imm32; // jal
             end else begin
-                next_pc = jalr_target; // jalr
+                nextPc = jalrTarget; // jalr
             end
         end else begin
-            next_pc = pc + 4; // 正常 PC + 4
+            nextPc = pc + 4; // 正常 PC + 4
         end
     end
 
     // 指令读取
     always @(*) begin
-        if (test_scenario != 32'd0) begin
-            instruction = test_scenario; // UART 输入覆盖指令
+        if (testScenario != 32'd0) begin
+            instruction = testScenario; // UART 输入覆盖指令
         end else begin
-            instruction = bram_instruction; // 从 BRAM 读取指令
+            instruction = bramInstruction; // 从 BRAM 读取指令
         end
     end
 

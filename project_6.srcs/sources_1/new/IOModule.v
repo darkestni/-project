@@ -1,17 +1,28 @@
 
 `timescale 1ns / 1ps
+//==============================================================================
+// Description:
+//     This module provides memory-mapped I/O support for peripherals such as 
+//     DIP switches, buttons, LEDs, and seven-segment displays (7-seg). It decodes 
+//     address inputs to determine which I/O device to interact with, handles 
+//     read/write operations, and provides the appropriate data routing.
+//
+//     Supported devices:
+//       - Button: readable via specific I/O address
+//       - LEDs: writable via specific I/O address
+//==============================================================================
 module IOModule (
-    input clk,
-    input [31:0] address,
-    input [31:0] writeData,
-    input memWrite,
-    input memRead,
-    input [7:0] dipSwitch,
-    input button,
-    output reg [31:0] readData,
-    output reg [7:0] led,
-    output reg [6:0] seg,
-    output reg [3:0] an
+    input clk,                      // System clock
+    input [31:0] address,           // Address to select which I/O device to access
+    input [31:0] writeData,         // Data to be written to the I/O device
+    input memWrite,                 // Enable signal for write operation
+    input memRead,                  // Enable signal for read operation
+    input [7:0] dipSwitch,          // Input from DIP switch (8 bits)
+    input button,                   // Input from single push button
+    output reg [31:0] readData,     // Data read from selected I/O device
+    output reg [7:0] led,           // Output to 8-bit LED array
+    output reg [6:0] seg,           // Output to 7-segment display segments (a¨Cg)
+    output reg [3:0] an             // Output to 7-segment display anode controls (digit enable)
 );
 
     localparam DIP_ADDR = 32'hFFFF0000;

@@ -1,14 +1,23 @@
 `timescale 1ns / 1ps
 
+//==============================================================================
+// Description:
+//     This module implements the data memory (DMem) for the processor. It supports
+//     both read and write operations with byte, half-word, and word granularity,
+//     as determined by the funct3 input (as per RISC-V load/store encoding).
+//     It is synchronous to the system clock and can be reset to an initial state.
+//
+//     The address is byte-addressed and should be word-aligned for 32-bit access.
+//==============================================================================
 module DMem (
-    input clk,
-    input reset,
-    input [2:0] funct3,
-    input memRead,
-    input memWrite,
-    input [31:0] address,
-    input [31:0] writeData,
-    output reg [31:0] readData
+    input clk,                      // System clock
+    input reset,                    // Active-high reset signal
+    input [2:0] funct3,             // Function code specifying data width (e.g., byte/half/word) for load/store
+    input memRead,                  // Enables memory read operation
+    input memWrite,                 // Enables memory write operation
+    input [31:0] address,           // Memory address for read or write
+    input [31:0] writeData,         // Data to be written to memory
+    output reg [31:0] readData      // Data read from memory
 );
 
     // ´æ´¢Æ÷¶¨Òå (64KB)
