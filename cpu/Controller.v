@@ -24,13 +24,13 @@
 module Controller (
     input [6:0] opcode,
     input [1:0] ecall,
-    input [21:0] AluResultHigh, // ALU 结果的高 22 位
+    input [21:0] ALU_result_high, // ALU 结果的高 22 位
     output reg RegWrite,
     output reg ALUSrc,
     output reg [1:0] ALUOp,
     output reg branch,
     output reg jump,
-    output reg MemorIOtoReg,
+    output reg MemorIO_to_Reg,
     output reg MemRead,
     output reg MemWrite,
     output reg IORead,
@@ -44,7 +44,7 @@ module Controller (
         ALUOp = 2'b00;
         branch = 0;
         jump = 0;
-        MemorIOtoReg = 0;
+        MemorIO_to_Reg = 0;
         MemRead = 0;
         MemWrite = 0;
         IORead = 0;
@@ -65,7 +65,7 @@ module Controller (
                 RegWrite = 1;
                 ALUSrc = 1;
                 ALUOp = 2'b00;
-                if (AluResultHigh == 22'h3FFFFF) begin
+                if (ALU_result_high == 22'h3FFFFF) begin
                     IORead = 1; // 地址在 IO 范围内
                 end else begin
                     MemRead = 1; // 地址在存储器范围内
@@ -74,7 +74,7 @@ module Controller (
             7'b0100011: begin // S 型 (sw)
                 ALUSrc = 1;
                 ALUOp = 2'b00;
-                if (AluResultHigh == 22'h3FFFFF) begin
+                if (ALU_result_high == 22'h3FFFFF) begin
                     IOWrite = 1; // 地址在 IO 范围内
                 end else begin
                     MemWrite = 1; // 地址在存储器范围内
@@ -115,8 +115,8 @@ module Controller (
             end
         endcase
 
-        // MemorIOtoReg 逻辑
-        MemorIOtoReg = IORead || MemRead;
+        // MemorIO_to_reg 逻辑
+        MemorIO_to_Reg = IORead || MemRead;
     end
 
 endmodule
