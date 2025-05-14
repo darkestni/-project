@@ -10,10 +10,13 @@ module MemOrIO(
     input  [31:0] r_rdata,     // Data from register file (to be written to memory/IO)
     output reg [31:0] write_data, // Data to write into memory or IO
     output       LEDCtrl,     // LED device chip select
-    output       SwitchCtrl   // Switch device chip select
+    output       SwitchCtrl,  // Switch device chip select
+    output        NumberCtrl
 );
 
-
+assign LEDCtrl    = (addr_in == 32'hFFFF_F000);
+    assign SwitchCtrl = (addr_in == 32'hFFFF_F010);
+    assign NumberCtrl = (addr_in == 32'hFFFF_F020);
 
 // write back to reg
 
@@ -22,8 +25,7 @@ assign r_wdata = (mRead)  ? m_rdata :
                  32'h0000_0000; 
 
 
-assign LEDCtrl    = (addr_in == 32'hFFFF_FC60);
-assign SwitchCtrl = (addr_in == 32'hFFFF_FC62);
+
 
 
 always @* begin
