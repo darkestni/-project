@@ -11,8 +11,7 @@ module MemOrIO_Pipeline (
     input        IORead_ctrl_from_exmem,      // I/O读使能信号 
     input        IOWrite_ctrl_from_exmem,     // I/O写使能信号 
     input [31:0] alu_result_addr_from_exmem,  // ALU计算结果作为地址 (来自EX级)
-    input [31:0] rdata2_for_store_from_exmem, // 要写入的数据 (来自EX, 原rs2数据)
-
+    input [31:0] rdata2_for_store_from_exmem, // 要写入Mem或IO的数据 (来自EX, 原rs2数据)
     input [31:0] data_read_from_dmem,         
     input [15:0] data_read_from_io,         
 
@@ -48,10 +47,12 @@ module MemOrIO_Pipeline (
 
     // 决定要写入内存或I/O设备的数据
     always @(*) begin
-        if (MemWrite_ctrl_from_exmem || IOWrite_ctrl_from_exmem) begin
+        if (
+            // write_reg_from_MemIO && 
+            (MemWrite_ctrl_from_exmem || IOWrite_ctrl_from_exmem)) begin
             data_to_write_to_dmem_io = rdata2_for_store_from_exmem;
         end else begin
-            data_to_write_to_dmem_io = 32'h00000000;
+            data_to_write_to_dmem_io = 32'h00000000; // 默认值
         end
     end
 

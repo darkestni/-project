@@ -19,8 +19,8 @@ module EXMEM_PipelineRegister (
     input [31:0] branch_target_addr_from_ex,    // 分支/跳转目标地址 (EX级计算得到)
     input [31:0] rdata2_for_store_from_ex,      // 用于Store指令的源操作数2的数据
     input [4:0]  rd_addr_from_ex,               // 目标寄存器地址
-    input [31:0] pc_from_ex,                    // 当前指令的PC值 (来自EX级)
-    input [31:0] pc_plus_4_from_ex,             // 当前指令的PC+4值 (来自EX级, 用于JAL/JALR写回)
+    // input [31:0] pc_from_ex,                    // 当前指令的PC值 (来自EX级)
+    // input [31:0] pc_plus_4_from_ex,             // 当前指令的PC+4值 (来自EX级, 用于JAL/JALR写回)
 
     // 控制信号 (来自EX阶段的Controller_EX_Logic或透传)
     input        final_RegWrite_ctrl_from_ex, // 最终的寄存器写使能信号
@@ -37,8 +37,8 @@ module EXMEM_PipelineRegister (
     output reg [31:0] branch_target_addr_to_mem,
     output reg [31:0] rdata2_for_store_to_mem,
     output reg [4:0]  rd_addr_to_mem,
-    output reg [31:0] pc_to_mem,
-    output reg [31:0] pc_plus_4_to_mem,
+    // output reg [31:0] pc_to_mem,
+    // output reg [31:0] pc_plus_4_to_mem,
 
     // 控制信号
     output reg        final_RegWrite_ctrl_to_mem,
@@ -70,8 +70,8 @@ module EXMEM_PipelineRegister (
             branch_target_addr_to_mem <= DATA_NOP_DEFAULT; // 目标地址设为0
             rdata2_for_store_to_mem   <= DATA_NOP_DEFAULT;
             rd_addr_to_mem            <= ADDR_NOP_DEFAULT; // 目标寄存器地址设为x0
-            pc_to_mem                 <= DATA_NOP_DEFAULT; // PC值设为0
-            pc_plus_4_to_mem          <= DATA_NOP_DEFAULT; // PC+4值设为0 (或4)
+            // pc_to_mem                 <= DATA_NOP_DEFAULT; // PC值设为0
+            // pc_plus_4_to_mem          <= DATA_NOP_DEFAULT; // PC+4值设为0 (或4)
 
             // 控制信号
             final_RegWrite_ctrl_to_mem <= CTL_NOP_REGWRITE;
@@ -88,8 +88,8 @@ module EXMEM_PipelineRegister (
             branch_target_addr_to_mem <= branch_target_addr_from_ex;
             rdata2_for_store_to_mem   <= rdata2_for_store_from_ex;
             rd_addr_to_mem            <= rd_addr_from_ex;
-            pc_to_mem                 <= pc_from_ex;
-            pc_plus_4_to_mem          <= pc_plus_4_from_ex;
+            // pc_to_mem                 <= pc_from_ex;
+            // pc_plus_4_to_mem          <= pc_plus_4_from_ex;
 
             // 控制信号
             final_RegWrite_ctrl_to_mem <= final_RegWrite_ctrl_from_ex;

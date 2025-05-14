@@ -1,19 +1,11 @@
 `timescale 1ns / 1ps
-//==============================================================================
-// Module: IOModule (适配流水线MEM阶段的I/O设备逻辑)
-// Author: [Your Name/Original Author]
-// Date: [Current Date]
-// Description:
-//     此模块实现内存映射I/O外设的逻辑，如DIP开关、按钮、LED和七段数码管。
-//     它接收来自MEM阶段主控逻辑(如MemOrIO)的完整I/O地址和通用的I/O读/写使能信号。
-//     本模块内部根据传入的io_address进行最终的设备选择和操作。
-//
-//     与流水线集成:
-//       - io_address, io_writeData, io_access_write_enable, io_access_read_enable
-//         信号由MEM阶段的MemOrIO模块在确认是I/O访问后提供。
-//       - 读出的数据返回给MemOrIO模块。
-//==============================================================================
-module IOModule (
+
+module IOModule #(
+    parameter BUTTON_WIDTH = 3,
+    parameter DIP_WIDTH = 16,
+    parameter LED_WIDTH = 16
+)
+(
     input clk,                      // 系统时钟
     // input reset,                 // 复位信号，根据需要添加
 
@@ -22,16 +14,19 @@ module IOModule (
     input [31:0] io_writeData,      // 要写入I/O设备的数据 (由MemOrIO传递)
     input        io_access_write_enable, // 通用I/O写操作使能 (当MemOrIO确认是I/O写时为高)
     input        io_access_read_enable,  // 通用I/O读操作使能 (当MemOrIO确认是I/O读时为高)
+    input  [BUTTON_WIDTH-1:0]  button_physical_in,    // 来自按钮的物理输入
+    input led_write_enable,
+    input switch_read_enable,
 
     // --- 实际的物理I/O端口 ---
-    input [7:0]  dipSwitch_physical_in, // 来自DIP开关的物理输入 (8位)
-    input        button_physical_in,    // 来自按钮的物理输入
+    input [DIP_WIDTH-1:0]  dipSwitch_physical_in, // 来自DIP开关的物理输入
 
     output reg [31:0] io_readData_out,  // 从选定I/O设备读取的数据 (送回MemOrIO)
-    output reg [7:0]  led_physical_out, // 输出到8位LED阵列的物理信号
+    output reg [LED_WIDTH-1:0]  led_physical_out, // 输出到8位LED阵列的物理信号
     output reg [6:0]  seg_physical_out, // 输出到七段数码管段码的物理信号 (a–g)
     output reg [3:0]  an_physical_out   // 输出到七段数码管位选的物理信号
 );
+
 
     // I/O设备绝对地址映射
     // 这些地址应与CPU设计中为I/O设备规划的地址完全一致
@@ -61,11 +56,11 @@ module IOModule (
     always @(*) begin
         io_readData_out = 32'd0; // 默认无读数据或无效读取
         if (io_access_read_enable) begin
-            case (io_address)
-                DIP_ADDR:    io_readData_out = {24'd0, dipSwitch_physical_in};
-                BUTTON_ADDR: io_readData_out = {31'd0, button_physical_in};
-                // default: io_readData_out = 32'd0; // 已在外部设置默认值
-            endcase
+            if (io_address == DIP_ADDR) begin
+                io_readData_out = {{(32-DIP_WIDTH){1'b0}}, dipSwitch_physical_in};
+            end else if (io_address == BUTTON_ADDR && switch_read_enable) begin
+                io_readData_out ={{(32-BUTTON_WIDTH){1'b0}}, dipSwitch_physical_in};
+            end
         end
     end
 
@@ -80,7 +75,7 @@ module IOModule (
         // end else
         if (io_access_write_enable) begin
             case (io_address)
-                LED_ADDR:  led_physical_out <= io_writeData[7:0];
+                LED_ADDR:  if (led_write_enable) led_physical_out <= io_writeData[LED_WIDTH-1:0];
                 SEG_ADDR: begin
                     // 假设 io_writeData[3:0] 是要显示的数字 (0-9)
                     // 假设 io_writeData[7:4] 控制位选 an (如果需要更复杂的控制)

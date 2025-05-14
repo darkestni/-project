@@ -6,7 +6,7 @@ module Controller_ID (
 
     // to id/ex pipeline register
     output reg regWrite_o,
-    output reg ALUSrc_o,
+    output reg ALUSrc_o, //0: rs2, 1: imm
     output reg [3:0] ALUOp_o, 
     output reg branch_o,
     output reg jump_o,

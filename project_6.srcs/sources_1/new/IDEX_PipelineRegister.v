@@ -18,7 +18,7 @@ module IDEX_PipelineRegister (
     // 控制信号
     input        regWrite_ctrl_from_id,
     input        ALUSrc_ctrl_from_id,
-    input [2:0]  ALUOp_ctrl_from_id,
+    input [3:0]  ALUOp_ctrl_from_id,
     input        branch_ctrl_from_id,
     input        jump_ctrl_from_id,
     input        isLoad_ctrl_from_id,
@@ -39,7 +39,7 @@ module IDEX_PipelineRegister (
     // 控制信号
     output reg        regWrite_ctrl_to_ex,
     output reg        ALUSrc_ctrl_to_ex,
-    output reg [2:0]  ALUOp_ctrl_to_ex,
+    output reg [4:0]  ALUOp_ctrl_to_ex,
     output reg        branch_ctrl_to_ex,
     output reg        jump_ctrl_to_ex,
     output reg        isLoad_ctrl_to_ex,
@@ -50,7 +50,7 @@ module IDEX_PipelineRegister (
     // 定义NOP（空操作）时的控制信号值
     localparam CTL_NOP_REGWRITE  = 1'b0;
     localparam CTL_NOP_ALUSRC    = 1'b0; // 对于NOP，ALUSrc的值不重要
-    localparam CTL_NOP_ALUOP     = 3'b000; // 例如，设为ADD，但结果不会被使用
+    localparam CTL_NOP_ALUOP     = 4'b0000; // 例如，设为ADD，但结果不会被使用
     localparam CTL_NOP_BRANCH    = 1'b0;
     localparam CTL_NOP_JUMP      = 1'b0;
     localparam CTL_NOP_ISLOAD    = 1'b0;

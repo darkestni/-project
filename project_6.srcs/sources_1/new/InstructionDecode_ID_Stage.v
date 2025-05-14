@@ -25,13 +25,13 @@ module InstructionDecode_ID_Stage (
     // --- 输出到 ID/EX 流水线寄存器 (来自Controller_ID的控制信号) ---
     output regWrite_ctrl_to_ex,
     output ALUSrc_ctrl_to_ex,
-    output [2:0] ALUOp_ctrl_to_ex, // 与Controller_ID的ALUOp_o宽度一致
+    output [3:0] ALUOp_ctrl_to_ex, // 与Controller_ID的ALUOp_o宽度一致
     output branch_ctrl_to_ex,
     output jump_ctrl_to_ex,
     output isLoad_ctrl_to_ex,
-    output isStore_ctrl_to_ex,
-    output isEcall_ctrl_to_ex,
-    output [1:0] ecall_type_to_ex // 将ecall类型传递给EX，用于后续精确控制
+    output isStore_ctrl_to_ex
+    // output isEcall_ctrl_to_ex,
+    // output [1:0] ecall_type_to_ex // 将ecall类型传递给EX，用于后续精确控制
 );
 
     // 内部连线
@@ -63,12 +63,12 @@ module InstructionDecode_ID_Stage (
     localparam ECALL_TYPE_READ_ID     = 2'b01; // 对应您原Controller的 ecall == 2'b01
     localparam ECALL_TYPE_WRITE_ID    = 2'b10; // 对应您原Controller的 ecall == 2'b10
 
-    assign ecall_type_w = (opcode_w == OPCODE_ECALL_ID_STAGE && funct3_w == 3'b000) ?
-                            ((instruction_ifid[31:20] == 12'd0) ? ECALL_TYPE_READ_ID :
-                             (instruction_ifid[31:20] == 12'd1) ? ECALL_TYPE_WRITE_ID :
-                                                                  ECALL_TYPE_NONE_ID) :
-                                                                  ECALL_TYPE_NONE_ID;
-    assign ecall_type_to_ex = ecall_type_w; // 将此类型传递到EX级
+    // assign ecall_type_w = (opcode_w == OPCODE_ECALL_ID_STAGE && funct3_w == 3'b000) ?
+    //                         ((instruction_ifid[31:20] == 12'd0) ? ECALL_TYPE_READ_ID :
+    //                          (instruction_ifid[31:20] == 12'd1) ? ECALL_TYPE_WRITE_ID :
+    //                                                               ECALL_TYPE_NONE_ID) :
+    //                                                               ECALL_TYPE_NONE_ID;
+    // assign ecall_type_to_ex = ecall_type_w; // 将此类型传递到EX级
 
     // --- 2. 例化寄存器堆 ---
     RegisterFile reg_file_inst (
@@ -106,7 +106,7 @@ module InstructionDecode_ID_Stage (
         .opcode(opcode_w),
         .funct3(funct3_w),         // 传递funct3
         .funct7(funct7_w),         // 传递funct7
-        .ecall_type_in(ecall_type_w), // 使用提取出的ecall类型
+        // .ecall_type_in(ecall_type_w), // 使用提取出的ecall类型
         // 连接Controller_ID的输出到本模块的输出端口
         .regWrite_o(regWrite_ctrl_to_ex),
         .ALUSrc_o(ALUSrc_ctrl_to_ex),
@@ -114,7 +114,8 @@ module InstructionDecode_ID_Stage (
         .branch_o(branch_ctrl_to_ex),
         .jump_o(jump_ctrl_to_ex),
         .isLoad_o(isLoad_ctrl_to_ex),
-        .isStore_o(isStore_ctrl_to_ex),
-        .isEcall_o(isEcall_ctrl_to_ex)
+        // .isEcall_o(isEcall_ctrl_to_ex),
+        .isStore_o(isStore_ctrl_to_ex)
+
     );
 endmodule

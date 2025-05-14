@@ -3,10 +3,9 @@ module IFetch (
     input reset,
 
     // --- 来自控制单元/冒险检测单元的控制信号 ---
-    input        branch,      // PC来源选择信号: 0 = PC+4, 1 = 跳转/分支目标地址
-                                    // 这个信号由后续阶段（如EX或MEM）的跳转决策逻辑产生并反馈回来
-    input [31:0] target_pc_in_if,   // 跳转/分支的目标PC地址
-    input        stall_if,          // 为1时，PC不更新，IF/ID也不写入
+    input        branch,      // PC来源选择信号: 0 = PC+4, 1 = 跳转
+    input [31:0] target_pc_in_if,   // 跳转的目标PC地址
+    input        stall_if,         
 
 
     input        debugMode,
@@ -14,8 +13,8 @@ module IFetch (
 
     // --- to IF/ID Pipe Reg ---
     output reg [31:0] instruction_to_ifid, // 获取到的指令
-    output reg [31:0] pc_current_to_ifid,  // 当前指令的PC值
-    output reg [31:0] pc_plus_4_to_ifid    // 当前PC + 4 的值
+    output reg [31:0] pc_current_to_ifid,  // 当前PC
+    output reg [31:0] pc_plus_4_to_ifid    // 当前PC + 4
 );
 
     parameter RESET_PC = 32'h00000000;
@@ -27,15 +26,6 @@ module IFetch (
 
 
     wire [31:0] bram_instruction_data; // read from Instruction Memory
-
-    // blk_mem_gen_0 instMemBram (
-    //     .clka(clk),
-    //     .wea(1'b0),                     
-    //     .addra(pc_reg[11:2]),         
-    //     .dina(32'h0),                   
-    //     .douta(bram_instruction_data),   
-    //     .MUX_RST(reset)                  
-    // );
 
     prgrom urom(
         .clka(clk),         
