@@ -116,15 +116,6 @@ module Execute_Stage_Wrapper (
 
     //·¢ÉúBEQ,JAL,JALRÊ± branch_or_jump_to_if = 1
     always @(*) begin
-<<<<<<< HEAD
-        if (is_branch_type_ex && condition_met_for_branch) begin
-            branch_or_jump_to_if = 1'b1;
-            target_pc_ex            = branch_jal_target_addr_calc;
-        end else if (is_jalr_type_ex) begin
-            branch_or_jump_to_if = 1'b1;
-            target_pc_ex            = jalr_target_addr_calc;
-        end else begin
-=======
         if (branch_ctrl_from_idex 
         && alu_zero_flag
         // && condition_met_for_branch
@@ -141,7 +132,6 @@ module Execute_Stage_Wrapper (
             target_pc_ex            = pc_from_idex + imm32_from_idex;
         end 
         else begin
->>>>>>> parent of 9c7cdd5 (ID_forward_incomplete)
             branch_or_jump_to_if = 1'b0;
             target_pc_ex            = pc_from_idex + 32'd4;
         end
