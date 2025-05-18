@@ -22,14 +22,6 @@ module InstructionDecode_ID_Stage (
     output [31:0] pc_to_ex,
     // output [31:0] pc_plus_4_to_ex, // 如果需要传递
 
-
-
-    //for test
-    output [31:0] x1,
-    output [31:0] x2,
-    output [31:0] x3,
-    output [31:0] x4,
-
     // --- 输出到 ID/EX 流水线寄存器 (来自Controller_ID的控制信号) ---
     output regWrite_ctrl_to_ex,
     output ALUSrc_ctrl_to_ex,
@@ -77,6 +69,7 @@ module InstructionDecode_ID_Stage (
     //                                                               ECALL_TYPE_NONE_ID) :
     //                                                               ECALL_TYPE_NONE_ID;
     // assign ecall_type_to_ex = ecall_type_w; // 将此类型传递到EX级
+
     // --- 2. 例化寄存器堆 ---
     RegisterFile reg_file_inst (
         .clk(clk),
@@ -87,12 +80,6 @@ module InstructionDecode_ID_Stage (
         .write_addr_wb(write_addr_from_wb),
         .write_data_wb(write_data_from_wb),
         .read_data1_id(rdata1_to_ex),
-        //for test
-        .x1(x1),
-        .x2(x2),
-        .x3(x3),
-        .x4(x4),
-
         .read_data2_id(rdata2_to_ex)
     );
 

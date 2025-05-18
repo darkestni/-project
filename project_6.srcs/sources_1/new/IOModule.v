@@ -73,7 +73,6 @@ module IOModule #(
         //    seg_physical_out <= 7'b1111111; // 例如：共阳极全灭
         //    an_physical_out  <= 4'b1111;    // 例如：全不选通
         // end else
-    
         if (io_access_write_enable) begin
             case (io_address)
                 LED_ADDR:  if (led_write_enable) led_physical_out <= io_writeData[LED_WIDTH-1:0];

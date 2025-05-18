@@ -1,20 +1,6 @@
 module PipelineCPU (
     input clk,
     input reset,
-
-
-
-    //for test
-    output wire [31:0] x1,
-    output wire [31:0] x2,
-    output wire [31:0] x3,
-    output wire [31:0] x4,
-
-    input debugMode,
-    input [31:0] testScenario,
-
-
-
     input  [15:0] switch_in,  // 拨码开关输入
     output [15:0] led_out     // LED输出
 );
@@ -25,35 +11,11 @@ module PipelineCPU (
     wire branch;
     wire [31:0] target_pc_in_if;
     wire stall_if; //占位
-    // reg debugMode = 1'b1; 
-    // reg [31:0] testScenario = 32'd0; // 测试场景输入
+    reg debugMode = 1'b1; 
+    reg [31:0] testScenario = 32'd0; // 测试场景输入
     wire [31:0] instruction_to_ifid;
     wire [31:0] pc_current_to_ifid;
     wire [31:0] pc_plus_4_to_ifid;
-    wire [1:0] forwardA_from_idex;
-    wire [1:0] forwardB_from_idex;
-    wire [1:0] forwardA_to_ex;
-    wire [1:0] forwardB_to_ex;
-    wire [31:0] alu_result_to_wb;
-    // wire [31:0] data_read_from_mem_to_wb;
-    wire [4:0]  rd_addr_to_wb;
-    wire final_RegWrite_ctrl_to_wb;
-    wire MemToReg_ctrl_to_wb;
-    wire [31:0] alu_result_to_mem;
-    wire [31:0] branch_target_addr_to_mem;
-    wire [31:0] rdata2_for_store_to_mem;
-    wire [4:0]  rd_addr_to_mem;
-    wire [31:0] pc_to_mem;
-    wire [31:0] pc_plus_4_to_mem;
-    wire final_RegWrite_ctrl; //直接to WB
-    wire MemRead_ctrl_to_mem;
-    wire MemWrite_ctrl_to_mem;
-    wire IORead_ctrl_to_mem;
-    wire IOWrite_ctrl_to_mem;
-    wire MemToReg_ctrl_to_mem;
-        wire [31:0] data_read_memwb_to_wb;
-
-    
     IFetch u_ifetch (
         .clk(clk),
         .reset(reset),
@@ -68,18 +30,16 @@ module PipelineCPU (
     );
 
 
-    wire ifid_stall;
-    // assign ifid_enable_write = 1'b1; // 占位
+    wire ifid_enable_write;
+    assign ifid_enable_write = 1'b1; // 占位
     wire ifid_flush_ifid;
     wire [31:0] instruction_to_id;
     wire [31:0] pc_current_to_id;
     wire [31:0] pc_plus_4_to_id;
-
-
     IFID_PipelineRegister u_ifid_reg (
         .clk(clk),
         .reset(reset),
-        .enable_write(!ifid_stall), // 这里假设总是允许写入
+        .enable_write(ifid_enable_write), // 这里假设总是允许写入
         .flush_ifid(ifid_flush_ifid),   // 假设没有冲刷信号
         .instruction_from_if(instruction_to_ifid),
         .pc_current_from_if(pc_current_to_ifid),
@@ -90,8 +50,8 @@ module PipelineCPU (
     );
 
 
-    wire [4:0] write_addr_from_wb;
-    wire [31:0]write_data_from_wb;
+    wire write_addr_from_wb;
+    wire write_data_from_wb;
     wire [31:0] rdata1_to_ex;
     wire [31:0] rdata2_to_ex;
     wire [31:0] imm32_to_ex;
@@ -99,7 +59,7 @@ module PipelineCPU (
     wire [4:0] rs1_addr_to_ex;
     wire [4:0] rs2_addr_to_ex;
     wire [31:0] pc_to_ex;
-    // wire [31:0] pc_plus_4_to_ex;
+    wire [31:0] pc_plus_4_to_ex;
     wire regWrite_ctrl_to_ex;
     wire ALUSrc_ctrl_to_ex;
     wire [3:0] ALUOp_ctrl_to_ex;
@@ -107,11 +67,8 @@ module PipelineCPU (
     wire jump_ctrl_to_ex;
     wire isLoad_ctrl_to_ex;
     wire isStore_ctrl_to_ex;
-    wire isEcall_ctrl_to_ex;
-    wire [1:0] ecall_type_to_ex;
-    wire [4:0] rd_addr_from_id;
-    wire [4:0] rs1_addr_from_id;
-    wire [4:0] rs2_addr_from_id;
+    // wire isEcall_ctrl_to_ex;
+    // wire [1:0] ecall_type_to_ex;
     InstructionDecode_ID_Stage u_id_stage (
         .clk(clk),
         .reset(reset),
@@ -120,23 +77,14 @@ module PipelineCPU (
         .reg_write_enable_from_wb(reg_write_enable_from_wb),
         .write_addr_from_wb(write_addr_from_wb),
         .write_data_from_wb(write_data_from_wb),
-
-        //for test
-        .x1(x1),
-        .x2(x2),
-        .x3(x3),
-        .x4(x4),
-
-
-        //output
         .rdata1_to_ex(rdata1_to_ex),
         .rdata2_to_ex(rdata2_to_ex),
         .imm32_to_ex(imm32_to_ex),
-        .rd_addr_to_ex(rd_addr_from_id),
-        .rs1_addr_to_ex(rs1_addr_from_id),
-        .rs2_addr_to_ex(rs2_addr_from_id),
+        .rd_addr_to_ex(rd_addr_to_ex),
+        .rs1_addr_to_ex(rs1_addr_to_ex),
+        .rs2_addr_to_ex(rs2_addr_to_ex),
         .pc_to_ex(pc_to_ex),
-        // .pc_plus_4_to_ex(pc_plus_4_to_ex),
+        .pc_plus_4_to_ex(pc_plus_4_to_ex),
         .regWrite_ctrl_to_ex(regWrite_ctrl_to_ex),
         .ALUSrc_ctrl_to_ex(ALUSrc_ctrl_to_ex),
         .ALUOp_ctrl_to_ex(ALUOp_ctrl_to_ex),
@@ -170,30 +118,18 @@ module PipelineCPU (
     wire jump_ctrl_idex_to_ex;
     wire isLoad_ctrl_idex_to_ex;
     wire isStore_ctrl_idex_to_ex;
-    wire idex_flush;
-
-    //     ForwardingUnit u_forwarding_unit (
-    //     .id_ex_rs1(rs1_addr_idex_to_ex),
-    //     .id_ex_rs2(rs2_addr_idex_to_ex),
-    //     .ex_mem_rd(rd_addr_to_mem),
-    //     .ex_mem_regWrite(final_RegWrite_ctrl),
-    //     .mem_wb_rd(rd_addr_to_wb),
-    //     .mem_wb_regWrite(final_RegWrite_ctrl_to_wb),
-    //     .forwardA(forwardA_from_idex),
-    //     .forwardB(forwardB_from_idex)
-    // );
     IDEX_PipelineRegister u_idex_reg (
         //input
         .clk(clk),
         .reset(reset),
         .enable_write(idex_enable_write), 
-        .flush_idex(idex_flush),   // 假设没有冲刷信号
+        .flush_idex(1'b0),   // 假设没有冲刷信号
         .rdata1_from_id(rdata1_to_ex),
         .rdata2_from_id(rdata2_to_ex),
         .imm32_from_id(imm32_to_ex),
-        .rd_addr_from_id(rd_addr_from_id),
-        .rs1_addr_from_id(rs1_addr_from_id),
-        .rs2_addr_from_id(rs2_addr_from_id),
+        .rd_addr_from_id(rd_addr_to_ex),
+        .rs1_addr_from_id(rs1_addr_to_ex),
+        .rs2_addr_from_id(rs2_addr_to_ex),
         .pc_from_id(pc_to_ex),
         .ecall_type_from_id(2'b00),
         .regWrite_ctrl_from_id(regWrite_ctrl_to_ex),
@@ -204,8 +140,6 @@ module PipelineCPU (
         .isLoad_ctrl_from_id(isLoad_ctrl_to_ex),
         .isStore_ctrl_from_id(isStore_ctrl_to_ex),
         .isEcall_ctrl_from_id(1'b0),
-        .forwardA_from_id(forwardA_from_idex),
-        .forwardB_from_id(forwardB_from_idex),
         //output
         .rdata1_to_ex(rdata1_idex_to_ex),
         .rdata2_to_ex(rdata2_idex_to_ex),
@@ -214,7 +148,7 @@ module PipelineCPU (
         .rs1_addr_to_ex(rs1_addr_idex_to_ex),
         .rs2_addr_to_ex(rs2_addr_idex_to_ex),
         .pc_to_ex(pc_idex_to_ex),
-        .ecall_type_to_ex(ecall_type_to_ex),
+        .ecall_type_to_ex(2'b00),
         .regWrite_ctrl_to_ex(regWrite_ctrl_idex_to_ex),
         .ALUSrc_ctrl_to_ex(ALUSrc_ctrl_idex_to_ex),
         .ALUOp_ctrl_to_ex(ALUOp_ctrl_idex_to_ex),
@@ -222,9 +156,7 @@ module PipelineCPU (
         .jump_ctrl_to_ex(jump_ctrl_idex_to_ex),
         .isLoad_ctrl_to_ex(isLoad_ctrl_idex_to_ex),
         .isStore_ctrl_to_ex(isStore_ctrl_idex_to_ex),
-        .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex),
-        .forwardA_to_ex(forwardA_to_ex),
-        .forwardB_to_ex(forwardB_to_ex)
+        .isEcall_ctrl_to_ex(1'b0)
 
     );
 
@@ -232,17 +164,16 @@ module PipelineCPU (
     
 
 
-    wire [31:0]alu_result_to_exmem;
-    wire [31:0] branch_target_addr_to_exmem; // no use
-    wire [31:0] rdata2_for_store_to_exmem;
-    wire [4:0] rd_addr_to_exmem;
+    wire alu_result_to_exmem;
+    wire branch_condition_met_to_exmem;
+    wire branch_target_addr_to_exmem;
+    wire rdata2_for_store_to_exmem;
+    wire rd_addr_to_exmem;
     wire MemRead_to_exmem;
     wire MemWrite_to_exmem;
     wire IORead_to_exmem;
     wire IOWrite_to_exmem;
     wire MemToReg_to_exmem; 
-
-
 
     Execute_Stage_Wrapper u_exe (
         //input
@@ -260,10 +191,6 @@ module PipelineCPU (
         .jump_ctrl_from_idex(jump_ctrl_idex_to_ex),
         .isLoad_ctrl_from_idex(isLoad_ctrl_idex_to_ex),
         .isStore_ctrl_from_idex(isStore_ctrl_idex_to_ex),
-        .forwardA_from_idex(forwardA_to_ex),
-        .forwardB_from_idex(forwardB_to_ex),
-        .memwb_read_from_mem(data_read_memwb_to_wb),
-        .exmem_alu_result(alu_result_to_mem),
         //output
         .alu_result_addr_to_exmem(alu_result_to_exmem),
         .rdata2_for_store_to_exmem(rdata2_for_store_to_exmem),
@@ -280,7 +207,18 @@ module PipelineCPU (
 
 
 
-
+    wire [31:0] alu_result_to_mem;
+    wire [31:0] branch_target_addr_to_mem;
+    wire [31:0] rdata2_for_store_to_mem;
+    wire [4:0]  rd_addr_to_mem;
+    wire [31:0] pc_to_mem;
+    wire [31:0] pc_plus_4_to_mem;
+    wire final_RegWrite_ctrl; //直接to WB
+    wire MemRead_ctrl_to_mem;
+    wire MemWrite_ctrl_to_mem;
+    wire IORead_ctrl_to_mem;
+    wire IOWrite_ctrl_to_mem;
+    wire MemToReg_ctrl_to_mem;
 
     EXMEM_PipelineRegister u_exmem_reg (
         //input
@@ -289,7 +227,7 @@ module PipelineCPU (
         .enable_write(1'b1), // 假设总是允许写入
         .flush_exmem(1'b0),  // 假设没有冲刷信号
         .alu_result_from_ex(alu_result_to_exmem),
-        .branch_target_addr_from_ex(branch_target_addr_to_exmem), // no use
+        .branch_target_addr_from_ex(branch_target_addr_to_exmem),
         .rdata2_for_store_from_ex(rdata2_for_store_to_exmem),
         .rd_addr_from_ex(rd_addr_to_exmem),
         // .pc_from_ex(pc_current_to_id),
@@ -305,7 +243,7 @@ module PipelineCPU (
         .MemToReg_ctrl_from_ex(MemToReg_to_exmem),
         //output
         .alu_result_to_mem(alu_result_to_mem),
-        .branch_target_addr_to_mem(branch_target_addr_to_mem), //no use
+        .branch_target_addr_to_mem(branch_target_addr_to_mem),
         .rdata2_for_store_to_mem(rdata2_for_store_to_mem),
         .rd_addr_to_mem(rd_addr_to_mem),
         // .pc_to_mem(pc_to_mem),
@@ -387,9 +325,11 @@ module PipelineCPU (
         .seg_physical_out(seg_physical_out), // 输出到七段数码管段码的物理信号 (a–g)
         .an_physical_out(an_physical_out) // 输出到七段数码管位选的物理信号
     );
-
-
-
+        wire [31:0] alu_result_to_wb;
+        wire [31:0] data_read_from_mem_to_wb;
+        wire [4:0]  rd_addr_to_wb;
+        wire final_RegWrite_ctrl_to_wb;
+        wire MemToReg_ctrl_to_wb;
         MEMWB_PipelineRegister u_memwb_reg (
             .clk(clk),
             .reset(reset),
@@ -398,44 +338,20 @@ module PipelineCPU (
             .rd_addr_from_mem(rd_addr_to_mem),
             .final_RegWrite_ctrl_from_mem(final_RegWrite_ctrl),
             .MemToReg_ctrl_from_mem(MemToReg_ctrl_to_mem),
-            //output
             .alu_result_to_wb(alu_result_to_wb),
-            .data_read_from_mem_to_wb(data_read_memwb_to_wb),
+            .data_read_from_mem_to_wb(data_read_from_mem_to_wb),
             .rd_addr_to_wb(rd_addr_to_wb),
             .final_RegWrite_ctrl_to_wb(final_RegWrite_ctrl_to_wb),
             .MemToReg_ctrl_to_wb(MemToReg_ctrl_to_wb)
         );
 
-// module DataHazardDetect ( //处理Load-Use Hazard
 
-//     input idex_isLoad,
-//     input [4:0] idex_rd_addr,
-//     input [4:0] ifid_rs1_addr,
-//     input [4:0] ifid_rs2_addr,
-//     output reg pc_stall,
-//     output reg ifid_stall,
-//     output reg idex_nop
-// );
 
-// module WriteBack_Stage (
-//     // --- 输入信号 (来自MEM/WB流水线寄存器) ---
-//     input [31:0] alu_result_from_memwb,          // 来自ALU的计算结果
-//     input [31:0] data_read_from_mem_from_memwb,  // 从内存或I/O读取的数据
-//     input [4:0]  rd_addr_from_memwb,             // 目标寄存器的地址 (rd)
-//     input        final_RegWrite_ctrl_from_memwb, // 最终的寄存器写使能控制信号
-//     input        MemToReg_ctrl_from_memwb,       // 选择写回数据来源的控制信号
-//                                                  //   0: 数据来自ALU结果
-//                                                  //   1: 数据来自内存/IO读取结果
 
-//     // --- 输出信号 (送往RegisterFile的写端口) ---
-//     output reg [31:0] write_data_to_regfile,     // 最终要写入寄存器堆的数据
-//     output reg [4:0]  write_addr_to_regfile,     // 最终要写入寄存器堆的目标地址
-//     output reg        reg_write_enable_to_regfile // 最终的寄存器写使能信号
-// );
         WriteBack_Stage u_wb (
             //input
             .alu_result_from_memwb(alu_result_to_wb),
-            .data_read_from_mem_from_memwb(data_read_memwb_to_wb),
+            .data_read_from_mem_from_memwb(data_read_from_mem_to_wb),
             .rd_addr_from_memwb(rd_addr_to_wb),
             .final_RegWrite_ctrl_from_memwb(final_RegWrite_ctrl_to_wb),
             .MemToReg_ctrl_from_memwb(MemToReg_ctrl_to_wb),
@@ -445,33 +361,7 @@ module PipelineCPU (
             .reg_write_enable_to_regfile(reg_write_enable_from_wb)
         );
 
-        DataHazardDetect u_data_hazard (
-            .idex_isLoad(isLoad_ctrl_idex_to_ex),
-            .idex_rd_addr(rd_addr_idex_to_ex),
-            .ifid_rs1_addr(rs1_addr_from_id),
-            .ifid_rs2_addr(rs2_addr_from_id),
-            .pc_stall(stall_if),
-            .ifid_stall(ifid_stall), // 占位
-            .idex_nop(idex_flush) // 占位
-        );
-
-        // assign stall_if = !(ifid_enable_write && idex_enable_write);
-        // assign ifid_flush_ifid = !(stall_if && branch_condition_met_to_exmem);
-        assign ifid_flush_ifid = 0;
-
-        // assign idex_flush = !(stall_if && branch_condition_met_to_exmem);
-
-
-    ForwardingUnit u_forwarding_unit (
-        .id_ex_rs1(rs1_addr_idex_to_ex),
-        .id_ex_rs2(rs2_addr_idex_to_ex),
-        .ex_mem_rd(rd_addr_to_mem),
-        .ex_mem_regWrite(final_RegWrite_ctrl),
-        .mem_wb_rd(rd_addr_to_wb),
-        .mem_wb_regWrite(final_RegWrite_ctrl_to_wb),
-        .forwardA(forwardA_from_idex),
-        .forwardB(forwardB_from_idex)
-    );
+        assign stall_if = !(ifid_enable_write && idex_enable_write);
 
 
 
