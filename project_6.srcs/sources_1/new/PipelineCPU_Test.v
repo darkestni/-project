@@ -38,6 +38,8 @@ module PipelineCPU_Test (
     output wire        debug_id_isLoad_ctrl,
     output wire        debug_id_isStore_ctrl,
 
+    output wire        debug_id_pc_write_enable,
+    output wire [31:0] debug_id_pc_jump_target,
     // ID/EX Register Outputs (Inputs to EX Stage)
     output wire [31:0] debug_idex_pc,
     output wire [4:0]  debug_idex_rd_addr,
@@ -106,6 +108,8 @@ module PipelineCPU_Test (
     output wire [4:0] rs2_addr_from_id,
     output wire [4:0] rd_addr_to_mem,
     output wire final_RegWrite_ctrl,
+    output wire [1:0] debug_forwardA_id,
+    output wire [1:0] debug_forwardB_id,
 
 
     // --- End New Debug Outputs ---
@@ -153,12 +157,17 @@ module PipelineCPU_Test (
     wire MemToReg_ctrl_to_mem;
     wire [31:0] data_read_memwb_to_wb;
     assign debug_if_pc_reg = pc_current_to_ifid;
+    wire pc_write_enable_from_id;
+    wire [31:0] pc_jump_target_from_id;
     IFetch u_ifetch (
         .clk(clk),
         .reset(reset),
-        .branch(branch),
-        // .pc_reg(debug_if_pc_reg),
-        .target_pc_in_if(target_pc_in_if),
+
+        //control hazard
+        .branch(pc_write_enable_from_id),
+        .target_pc_in_if(pc_jump_target_from_id),
+
+
         .stall_if(stall_if),
         .debugMode(debugMode),
         .testScenario(testScenario),
@@ -243,6 +252,8 @@ module PipelineCPU_Test (
     wire [4:0] rd_addr_from_id;
     wire [4:0] rs1_addr_from_id;
     // wire [4:0] rs2_addr_from_id;
+    wire [1:0] forwardA_id;
+    wire [1:0] forwardB_id;
     InstructionDecode_ID_Stage u_id_stage (
         .clk(clk),
         .reset(reset),
@@ -274,11 +285,18 @@ module PipelineCPU_Test (
         .branch_ctrl_to_ex(branch_ctrl_to_ex),
         .jump_ctrl_to_ex(jump_ctrl_to_ex),
         .isLoad_ctrl_to_ex(isLoad_ctrl_to_ex),
-        .isStore_ctrl_to_ex(isStore_ctrl_to_ex)
-        // .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex),
-        // .ecall_type_to_ex(ecall_type_to_ex)
+        .isStore_ctrl_to_ex(isStore_ctrl_to_ex),
+
+        //control hazard
+        .pc_write_enable_from_id(pc_write_enable_from_id),
+        .pc_jump_target(pc_jump_target_from_id),
+        .forwardA_id(forwardA_id),
+        .forwardB_id(forwardB_id),
+        .memwb_write_to_reg(write_data_from_wb), // 来自WB阶段的写回数据
+        .exmem_alu_result(alu_result_to_mem) // 来自EX/MEM阶段的ALU结果
 
     );
+
 
 
     wire idex_enable_write; //占位
@@ -579,7 +597,11 @@ module PipelineCPU_Test (
         .mem_wb_rd(rd_addr_to_wb),
         .mem_wb_regWrite(final_RegWrite_ctrl_to_wb),
         .forwardA(forwardA_to_ex),
-        .forwardB(forwardB_to_ex)
+        .forwardB(forwardB_to_ex),
+        .forwardA_id(forwardA_id),
+        .forwardB_id(forwardB_id),
+        .id_rs1(rs1_addr_from_id),
+        .id_rs2(rs2_addr_from_id)
     );
 
 
@@ -674,6 +696,11 @@ module PipelineCPU_Test (
     assign debug_idex_flush_internal     = idex_flush; // This is idex_nop from DataHazardDetect
     assign debug_forwardA_from_fwd_unit  = forwardA_to_ex; // Direct output of ForwardingUnit
     assign debug_forwardB_from_fwd_unit  = forwardB_to_ex; // Direct output of ForwardingUnit
+
+    assign debug_id_pc_write_enable = pc_write_enable_from_id; // Actual control signal for PC write
+    assign debug_id_pc_jump_target  = pc_jump_target_from_id; // Target PC for jump/branch
+    assign debug_forwardA_id = forwardA_id; // Forwarding signal for ID stage
+    assign debug_forwardB_id = forwardB_id; // Forwarding signal for ID stage
 
 endmodule
 

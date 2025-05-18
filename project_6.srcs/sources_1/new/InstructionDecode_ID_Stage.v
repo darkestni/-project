@@ -37,9 +37,18 @@ module InstructionDecode_ID_Stage (
     output branch_ctrl_to_ex,
     output jump_ctrl_to_ex,
     output isLoad_ctrl_to_ex,
-    output isStore_ctrl_to_ex
+    output isStore_ctrl_to_ex,
     // output isEcall_ctrl_to_ex,
     // output [1:0] ecall_type_to_ex // 将ecall类型传递给EX，用于后续精确控制
+
+    //control hazard
+    output reg pc_write_enable_from_id,
+    output reg [31:0] pc_jump_target,
+    input [1:0] forwardA_id,
+    input [1:0] forwardB_id,
+    input [31:0] memwb_write_to_reg, // 来自WB阶段的写回数据
+    input [31:0] exmem_alu_result // 来自EX/MEM阶段的ALU结果
+
 );
 
     // 内部连线
@@ -114,6 +123,8 @@ module InstructionDecode_ID_Stage (
         endcase
     end
 
+    wire jump_from_control;
+    wire branch_from_control;
     // --- 4. 例化 Controller_ID 模块 ---
     Controller_ID controller_id_inst (
         .opcode(opcode_w),
@@ -124,11 +135,34 @@ module InstructionDecode_ID_Stage (
         .regWrite_o(regWrite_ctrl_to_ex),
         .ALUSrc_o(ALUSrc_ctrl_to_ex),
         .ALUOp_o(ALUOp_ctrl_to_ex),
-        .branch_o(branch_ctrl_to_ex),
-        .jump_o(jump_ctrl_to_ex),
+        .branch_o(branch_from_control),
+        .jump_o(jump_from_control),
         .isLoad_o(isLoad_ctrl_to_ex),
         // .isEcall_o(isEcall_ctrl_to_ex),
         .isStore_o(isStore_ctrl_to_ex)
-
     );
+
+    assign branch_ctrl_to_ex = branch_from_control;
+    assign jump_ctrl_to_ex = jump_from_control;
+
+
+    // assign branch_ctrl_to_ex = 0;
+    // assign jump_ctrl_to_ex = 0;
+    //handle control hazard
+    wire [31:0] rdata1;
+    wire [31:0] rdata2;
+    assign rdata1 = (forwardA_id == 2'b01) ? exmem_alu_result : 
+                    (forwardA_id == 2'b10) ? memwb_write_to_reg : rdata1_to_ex;
+    assign rdata2 = (forwardB_id == 2'b01) ? exmem_alu_result :
+                    (forwardB_id == 2'b10) ? memwb_write_to_reg : rdata2_to_ex;
+    always @(*) begin
+         pc_write_enable_from_id = (branch_from_control && (rdata1_to_ex == rdata2_to_ex)) || jump_from_control;
+        pc_jump_target = (branch_from_control && (rdata1 == rdata2)) ? (pc_ifid + imm32_to_ex) :
+                            (jump_from_control ? pc_ifid + imm32_to_ex : 32'd0);
+    end
+    // assign pc_write_enable_from_id = (branch_from_control && (rdata1_to_ex == rdata2_to_ex)) || jump_from_control;
+    // assign pc_jump_target = (branch_from_control && (rdata1_to_ex == rdata2_to_ex)) ? (pc_ifid + imm32_to_ex) :
+    //                         (jump_from_control ? pc_ifid + imm32_to_ex : 32'd0);
+
+
 endmodule
