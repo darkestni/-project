@@ -117,28 +117,16 @@ module Execute_Stage_Wrapper (
     //发生BEQ,JAL,JALR时 branch_or_jump_to_if = 1
     //在ID阶段处理跳转时 ，branch_or_jump_to_if = 0
     always @(*) begin
-
-        branch_or_jump_to_if = 1'b0; 
-
-        // if (branch_ctrl_from_idex 
-        // && alu_zero_flag
-        // // && condition_met_for_branch
-        // ) begin
-        //     branch_or_jump_to_if = 1'b1;
-        //     target_pc_ex            = branch_jal_target_addr_calc;
-        // end else if (jump_ctrl_from_idex && ALUSrc_ctrl_from_idex) begin
-        //     //ALUSrc = 1: JALR
-        //     branch_or_jump_to_if = 1'b1;
-        //     target_pc_ex            = jalr_target_addr_calc;
-        // end else if (jump_ctrl_from_idex) begin
-        //     //JAL
-        //     branch_or_jump_to_if = 1'b1;
-        //     target_pc_ex            = pc_from_idex + imm32_from_idex;
-        // end 
-        // else begin
-        //     branch_or_jump_to_if = 1'b0;
-        //     target_pc_ex            = pc_from_idex + 32'd4;
-        // end
+        if (is_branch_type_ex && condition_met_for_branch) begin
+            branch_or_jump_to_if = 1'b1;
+            target_pc_ex            = branch_jal_target_addr_calc;
+        end else if (is_jalr_type_ex) begin
+            branch_or_jump_to_if = 1'b1;
+            target_pc_ex            = jalr_target_addr_calc;
+        end else begin
+            branch_or_jump_to_if = 1'b0;
+            target_pc_ex            = pc_from_idex + 32'd4;
+        end
     end
 
     // 6. 实例化 Controller_EX_Logic
