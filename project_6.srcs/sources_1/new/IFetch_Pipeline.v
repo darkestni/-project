@@ -22,27 +22,26 @@ module IFetch (
 
     reg [31:0] pc_reg;                  
     wire [31:0] pc_plus_4_calc;        
-    wire [31:0] next_pc_for_pc_reg;     
 
+
+    wire[31:0] pc_minus_4;
+    assign pc_minus_4 = pc_reg - 4;
+    assign pc_plus_4_calc = pc_reg + 4;
 
     wire [31:0] bram_instruction_data; // read from Instruction Memory
 
     prgrom urom(
         .clka(clk),         
-        .addra(pc_reg[15:2]),    
+        .addra(pc_plus_4_calc[15:2]),    
         .douta(bram_instruction_data) 
     );
-
-
-    assign pc_plus_4_calc = pc_reg + 4;
-    assign next_pc_for_pc_reg = branch ? target_pc_in_if : pc_plus_4_calc;
 
     // PC寄存器更新逻辑
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             pc_reg <= RESET_PC;
         end else if (!stall_if) begin // 如果IF阶段没有被暂停
-            pc_reg <= next_pc_for_pc_reg;
+            pc_reg <= branch ? target_pc_in_if : pc_plus_4_calc;
         end
         //出现Data Hazard时，stall = 1, IF暂停
         //pc_reg 保持不变, 相当于重新获取当前指令

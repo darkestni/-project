@@ -1,10 +1,8 @@
-module PipelineCPU (
+module PipelineCPU_Test (
     input clk,
     input reset,
 
-
-
-    //for test
+    //for test (existing)
     output wire [31:0] x1,
     output wire [31:0] x2,
     output wire [31:0] x3,
@@ -13,15 +11,116 @@ module PipelineCPU (
     input debugMode,
     input [31:0] testScenario,
 
+    // --- New Debug Outputs ---
+    // IF Stage
+    output wire [31:0] debug_if_pc_current,         // Current PC in IF
+    output wire [31:0] debug_if_instruction_out,    // Instruction fetched by IF (to IF/ID)
+    output wire [31:0] debug_if_pc_reg,
+    output wire [31:0] debug_if_instruction_from_prgrom, // Instruction from ROM
+
+    // IF/ID Register Outputs (Inputs to ID Stage)
+    output wire [31:0] debug_ifid_instruction,
+    output wire [31:0] debug_ifid_pc,
+    output wire        debug_ifid_enable_write_actual, // Actual enable for IF/ID reg
+
+    // ID Stage Outputs (Inputs to ID/EX Register)
+    output wire [31:0] debug_id_rdata1,             // rs1 data from RegFile
+    output wire [31:0] debug_id_rdata2,             // rs2 data from RegFile
+    output wire [31:0] debug_id_imm32,
+    output wire [4:0]  debug_id_rd_addr,
+    output wire [4:0]  debug_id_rs1_addr,
+    output wire [4:0]  debug_id_rs2_addr,
+    output wire        debug_id_regWrite_ctrl,
+    output wire [3:0]  debug_id_ALUOp_ctrl,
+    output wire        debug_id_ALUSrc_ctrl,
+    output wire        debug_id_branch_ctrl,
+    output wire        debug_id_jump_ctrl,
+    output wire        debug_id_isLoad_ctrl,
+    output wire        debug_id_isStore_ctrl,
+
+    // ID/EX Register Outputs (Inputs to EX Stage)
+    output wire [31:0] debug_idex_pc,
+    output wire [4:0]  debug_idex_rd_addr,
+    output wire [4:0]  debug_idex_rs1_addr,
+    output wire [4:0]  debug_idex_rs2_addr,
+    output wire [31:0] debug_idex_rdata1,
+    output wire [31:0] debug_idex_rdata2,
+    output wire [31:0] debug_idex_imm32,
+    output wire        debug_idex_regWrite_ctrl,
+    output wire [3:0]  debug_idex_ALUOp_ctrl,
+    output wire        debug_idex_ALUSrc_ctrl,
+    output wire        debug_idex_branch_ctrl,
+    output wire        debug_idex_jump_ctrl,
+    output wire        debug_idex_isLoad_ctrl,
+    output wire        debug_idex_isStore_ctrl,
+    output wire [1:0]  debug_idex_forwardA,        // ForwardA from IDEX to EX
+    output wire [1:0]  debug_idex_forwardB,        // ForwardB from IDEX to EX
+    output wire        debug_idex_enable_write_actual, // Actual enable for IDEX reg
+    output wire        debug_idex_flush_actual,        // Actual flush for IDEX reg
 
 
-    input  [15:0] switch_in,  // 拨码开关输入
-    output [15:0] led_out     // LED输出
+    // EX Stage Outputs (Inputs to EX/MEM Register)
+    output wire [31:0] debug_ex_alu_result,
+    output wire [4:0]  debug_ex_rd_addr,
+    output wire        debug_ex_regWrite_ctrl,
+    output wire        debug_ex_MemRead_ctrl,
+    output wire        debug_ex_MemWrite_ctrl,
+    output wire        debug_ex_MemToReg_ctrl,
+    output wire        debug_ex_branch_taken,      // branch_or_jump_to_if
+    output wire [31:0] debug_ex_target_pc,
+
+    // EX/MEM Register Outputs (Inputs to MEM Stage)
+    output wire [31:0] debug_exmem_alu_result,
+    output wire [4:0]  debug_exmem_rd_addr,
+    output wire [31:0] debug_exmem_rdata2_store,
+    output wire        debug_exmem_regWrite_ctrl,
+    output wire        debug_exmem_MemRead_ctrl,
+    output wire        debug_exmem_MemWrite_ctrl,
+    output wire        debug_exmem_IORead_ctrl,    // Added
+    output wire        debug_exmem_IOWrite_ctrl,   // Added
+    output wire        debug_exmem_MemToReg_ctrl,
+
+    // MEM Stage Outputs (Inputs to MEM/WB Register)
+    output wire [31:0] debug_mem_data_read,        // Data read from DMEM/IO
+    // (MEM/WB pass-throughs are mostly covered by MEM/WB reg outputs)
+
+    // MEM/WB Register Outputs (Inputs to WB Stage)
+    output wire [31:0] debug_memwb_alu_result,
+    output wire [31:0] debug_memwb_data_read,
+    output wire [4:0]  debug_memwb_rd_addr,
+    output wire        debug_memwb_regWrite_ctrl,
+    output wire        debug_memwb_MemToReg_ctrl,
+
+    // WB Stage Outputs (To Register File)
+    output wire [31:0] debug_wb_writeData,
+    output wire [4:0]  debug_wb_writeAddr,
+    output wire        debug_wb_regWriteEnable,
+
+    // Hazard Unit Signals
+    output wire debug_stall_if_internal,        // stall_if driven by DataHazardDetect
+    output wire debug_ifid_stall_internal,      // ifid_stall from DataHazardDetect
+    output wire debug_idex_flush_internal,      // idex_flush (idex_nop) from DataHazardDetect
+    output wire [1:0] debug_forwardA_from_fwd_unit, // Direct output from ForwardingUnit
+    output wire [1:0] debug_forwardB_from_fwd_unit, // Direct output from ForwardingUnit
+    //wire to forwarding unit
+    output wire [4:0] rs2_addr_from_id,
+    output wire [4:0] rd_addr_to_mem,
+    output wire final_RegWrite_ctrl,
+
+
+    // --- End New Debug Outputs ---
+
+
+
+
+    input  [15:0] switch_in,
+    output [15:0] led_out
 );
-    localparam BUTTON_WIDTH = 3; 
+  localparam BUTTON_WIDTH = 3; 
     localparam DIP_WIDTH = 16; // 假设拨码开关宽度为16位
     localparam LED_WIDTH = 16; 
-
+      wire [1:0] forwardA_to_ex;
+      wire [1:0] forwardB_to_ex;
     wire branch;
     wire [31:0] target_pc_in_if;
     wire stall_if; //占位
@@ -32,8 +131,9 @@ module PipelineCPU (
     wire [31:0] pc_plus_4_to_ifid;
     wire [1:0] forwardA_from_idex;
     wire [1:0] forwardB_from_idex;
-    wire [1:0] forwardA_to_ex;
-    wire [1:0] forwardB_to_ex;
+    wire idex_nop;
+
+    // wire [1:0] forwardB_to_ex;
     wire [31:0] alu_result_to_wb;
     // wire [31:0] data_read_from_mem_to_wb;
     wire [4:0]  rd_addr_to_wb;
@@ -42,30 +142,60 @@ module PipelineCPU (
     wire [31:0] alu_result_to_mem;
     wire [31:0] branch_target_addr_to_mem;
     wire [31:0] rdata2_for_store_to_mem;
-    wire [4:0]  rd_addr_to_mem;
+    // wire [4:0]  rd_addr_to_mem;
     wire [31:0] pc_to_mem;
     wire [31:0] pc_plus_4_to_mem;
-    wire final_RegWrite_ctrl; //直接to WB
+    // wire final_RegWrite_ctrl; //直接to WB
     wire MemRead_ctrl_to_mem;
     wire MemWrite_ctrl_to_mem;
     wire IORead_ctrl_to_mem;
     wire IOWrite_ctrl_to_mem;
     wire MemToReg_ctrl_to_mem;
-        wire [31:0] data_read_memwb_to_wb;
-
-    
+    wire [31:0] data_read_memwb_to_wb;
+    assign debug_if_pc_reg = pc_current_to_ifid;
     IFetch u_ifetch (
         .clk(clk),
         .reset(reset),
         .branch(branch),
+        // .pc_reg(debug_if_pc_reg),
         .target_pc_in_if(target_pc_in_if),
         .stall_if(stall_if),
         .debugMode(debugMode),
         .testScenario(testScenario),
+        // .bram_instruction_data(debug_if_instruction_from_prgrom), // 来自指令存储器的指令
         .instruction_to_ifid(instruction_to_ifid),
-        .pc_current_to_ifid(pc_current_to_ifid),
-        .pc_plus_4_to_ifid(pc_plus_4_to_ifid) 
+        .pc_current_to_ifid(pc_current_to_ifid)
+        // .pc_plus_4_to_ifid(pc_plus_4_to_ifid) 
     );
+    // wire [31:0] rom_instruction_data;
+    // PC u_pc (
+    //     .clk(clk),
+    //     .reset(reset),
+    //     .stall_pc(stall_if), // 暂停PC更新
+    //     .branch(branch), // 是否进行分支/跳转
+    //     .branch_target_pc(target_pc_in_if), // 分支/跳转的目标PC
+    //     .current_pc_out(pc_current_to_ifid) // 当前PC值
+    // );
+    // prgrom u_instr_rom (
+    //     .clka(clk),                 // Assuming prgrom is synchronous
+    //     .addra(pc_current_to_ifid[15:2]), // Example: Use bits 15 down to 2 for word addressing
+    //                                 // Adjust this based on your prgrom's address input width
+    //                                 // and how your PC maps to ROM addresses.
+    //     .douta(rom_instruction_data)
+    // );
+
+    // InstructionMemory u_instruction_memory (
+    //     .clk(clk),
+    //     .reset(reset),
+    //     .Instruction_prgrom(rom_instruction_data),
+    //     .pc_address_in(pc_current_to_ifid), // 当前PC值
+    //     .debugMode_in(debugMode),
+    //     .testScenario_in(testScenario),
+    //     .instruction_out_final(instruction_to_ifid) // 获取到的指令
+    // );
+    // assign debug_if_instruction_from_prgrom = instruction_to_ifid;
+
+
 
 
     wire ifid_stall;
@@ -73,7 +203,8 @@ module PipelineCPU (
     wire ifid_flush_ifid;
     wire [31:0] instruction_to_id;
     wire [31:0] pc_current_to_id;
-    wire [31:0] pc_plus_4_to_id;
+    // wire [31:0] pc_plus_4_to_id;
+    assign ifid_flush_ifid = branch;
 
 
     IFID_PipelineRegister u_ifid_reg (
@@ -83,14 +214,14 @@ module PipelineCPU (
         .flush_ifid(ifid_flush_ifid),   // 假设没有冲刷信号
         .instruction_from_if(instruction_to_ifid),
         .pc_current_from_if(pc_current_to_ifid),
-        .pc_plus_4_from_if(pc_plus_4_to_ifid),
+        // .pc_plus_4_from_if(pc_plus_4_to_ifid),
         .instruction_to_id(instruction_to_id),
-        .pc_current_to_id(pc_current_to_id),
-        .pc_plus_4_to_id(pc_plus_4_to_id)
+        .pc_current_to_id(pc_current_to_id)
+        // .pc_plus_4_to_id(pc_plus_4_to_id)
     );
 
 
-    wire [4:0] write_addr_from_wb;
+    wire [4:0]write_addr_from_wb;
     wire [31:0]write_data_from_wb;
     wire [31:0] rdata1_to_ex;
     wire [31:0] rdata2_to_ex;
@@ -111,7 +242,7 @@ module PipelineCPU (
     wire [1:0] ecall_type_to_ex;
     wire [4:0] rd_addr_from_id;
     wire [4:0] rs1_addr_from_id;
-    wire [4:0] rs2_addr_from_id;
+    // wire [4:0] rs2_addr_from_id;
     InstructionDecode_ID_Stage u_id_stage (
         .clk(clk),
         .reset(reset),
@@ -171,6 +302,7 @@ module PipelineCPU (
     wire isLoad_ctrl_idex_to_ex;
     wire isStore_ctrl_idex_to_ex;
     wire idex_flush;
+    assign idex_flush = branch;
 
     //     ForwardingUnit u_forwarding_unit (
     //     .id_ex_rs1(rs1_addr_idex_to_ex),
@@ -182,12 +314,14 @@ module PipelineCPU (
     //     .forwardA(forwardA_from_idex),
     //     .forwardB(forwardB_from_idex)
     // );
+    wire flush_idex;
+    assign flush_idex = idex_nop || branch;
     IDEX_PipelineRegister u_idex_reg (
         //input
         .clk(clk),
         .reset(reset),
         .enable_write(idex_enable_write), 
-        .flush_idex(idex_flush),   // 假设没有冲刷信号
+        .flush_idex(flush_idex),   
         .rdata1_from_id(rdata1_to_ex),
         .rdata2_from_id(rdata2_to_ex),
         .imm32_from_id(imm32_to_ex),
@@ -204,8 +338,8 @@ module PipelineCPU (
         .isLoad_ctrl_from_id(isLoad_ctrl_to_ex),
         .isStore_ctrl_from_id(isStore_ctrl_to_ex),
         .isEcall_ctrl_from_id(1'b0),
-        .forwardA_from_id(forwardA_from_idex),
-        .forwardB_from_id(forwardB_from_idex),
+        // .forwardA_from_id(forwardA_from_idex),
+        // .forwardB_from_id(forwardB_from_idex),
         //output
         .rdata1_to_ex(rdata1_idex_to_ex),
         .rdata2_to_ex(rdata2_idex_to_ex),
@@ -222,9 +356,9 @@ module PipelineCPU (
         .jump_ctrl_to_ex(jump_ctrl_idex_to_ex),
         .isLoad_ctrl_to_ex(isLoad_ctrl_idex_to_ex),
         .isStore_ctrl_to_ex(isStore_ctrl_idex_to_ex),
-        .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex),
-        .forwardA_to_ex(forwardA_to_ex),
-        .forwardB_to_ex(forwardB_to_ex)
+        .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex)
+        // .forwardA_to_ex(forwardA_to_ex),
+        // .forwardB_to_ex(forwardB_to_ex)
 
     );
 
@@ -233,9 +367,10 @@ module PipelineCPU (
 
 
     wire [31:0]alu_result_to_exmem;
-    wire [31:0] branch_target_addr_to_exmem; // no use
-    wire [31:0] rdata2_for_store_to_exmem;
-    wire [4:0] rd_addr_to_exmem;
+    wire branch_condition_met_to_exmem;
+    wire branch_target_addr_to_exmem;
+    wire [31:0]rdata2_for_store_to_exmem;
+    wire [4:0]rd_addr_to_exmem;
     wire MemRead_to_exmem;
     wire MemWrite_to_exmem;
     wire IORead_to_exmem;
@@ -262,7 +397,7 @@ module PipelineCPU (
         .isStore_ctrl_from_idex(isStore_ctrl_idex_to_ex),
         .forwardA_from_idex(forwardA_to_ex),
         .forwardB_from_idex(forwardB_to_ex),
-        .memwb_read_from_mem(data_read_memwb_to_wb),
+        .memwb_write_to_reg(write_data_from_wb),
         .exmem_alu_result(alu_result_to_mem),
         //output
         .alu_result_addr_to_exmem(alu_result_to_exmem),
@@ -289,7 +424,7 @@ module PipelineCPU (
         .enable_write(1'b1), // 假设总是允许写入
         .flush_exmem(1'b0),  // 假设没有冲刷信号
         .alu_result_from_ex(alu_result_to_exmem),
-        .branch_target_addr_from_ex(branch_target_addr_to_exmem), // no use
+        .branch_target_addr_from_ex(branch_target_addr_to_exmem),
         .rdata2_for_store_from_ex(rdata2_for_store_to_exmem),
         .rd_addr_from_ex(rd_addr_to_exmem),
         // .pc_from_ex(pc_current_to_id),
@@ -305,7 +440,7 @@ module PipelineCPU (
         .MemToReg_ctrl_from_ex(MemToReg_to_exmem),
         //output
         .alu_result_to_mem(alu_result_to_mem),
-        .branch_target_addr_to_mem(branch_target_addr_to_mem), //no use
+        .branch_target_addr_to_mem(branch_target_addr_to_mem),
         .rdata2_for_store_to_mem(rdata2_for_store_to_mem),
         .rd_addr_to_mem(rd_addr_to_mem),
         // .pc_to_mem(pc_to_mem),
@@ -406,32 +541,7 @@ module PipelineCPU (
             .MemToReg_ctrl_to_wb(MemToReg_ctrl_to_wb)
         );
 
-// module DataHazardDetect ( //处理Load-Use Hazard
 
-//     input idex_isLoad,
-//     input [4:0] idex_rd_addr,
-//     input [4:0] ifid_rs1_addr,
-//     input [4:0] ifid_rs2_addr,
-//     output reg pc_stall,
-//     output reg ifid_stall,
-//     output reg idex_nop
-// );
-
-// module WriteBack_Stage (
-//     // --- 输入信号 (来自MEM/WB流水线寄存器) ---
-//     input [31:0] alu_result_from_memwb,          // 来自ALU的计算结果
-//     input [31:0] data_read_from_mem_from_memwb,  // 从内存或I/O读取的数据
-//     input [4:0]  rd_addr_from_memwb,             // 目标寄存器的地址 (rd)
-//     input        final_RegWrite_ctrl_from_memwb, // 最终的寄存器写使能控制信号
-//     input        MemToReg_ctrl_from_memwb,       // 选择写回数据来源的控制信号
-//                                                  //   0: 数据来自ALU结果
-//                                                  //   1: 数据来自内存/IO读取结果
-
-//     // --- 输出信号 (送往RegisterFile的写端口) ---
-//     output reg [31:0] write_data_to_regfile,     // 最终要写入寄存器堆的数据
-//     output reg [4:0]  write_addr_to_regfile,     // 最终要写入寄存器堆的目标地址
-//     output reg        reg_write_enable_to_regfile // 最终的寄存器写使能信号
-// );
         WriteBack_Stage u_wb (
             //input
             .alu_result_from_memwb(alu_result_to_wb),
@@ -452,12 +562,11 @@ module PipelineCPU (
             .ifid_rs2_addr(rs2_addr_from_id),
             .pc_stall(stall_if),
             .ifid_stall(ifid_stall), // 占位
-            .idex_nop(idex_flush) // 占位
+            .idex_nop(idex_nop) // 占位
         );
 
         // assign stall_if = !(ifid_enable_write && idex_enable_write);
         // assign ifid_flush_ifid = !(stall_if && branch_condition_met_to_exmem);
-        assign ifid_flush_ifid = 0;
 
         // assign idex_flush = !(stall_if && branch_condition_met_to_exmem);
 
@@ -469,14 +578,104 @@ module PipelineCPU (
         .ex_mem_regWrite(final_RegWrite_ctrl),
         .mem_wb_rd(rd_addr_to_wb),
         .mem_wb_regWrite(final_RegWrite_ctrl_to_wb),
-        .forwardA(forwardA_from_idex),
-        .forwardB(forwardB_from_idex)
+        .forwardA(forwardA_to_ex),
+        .forwardB(forwardB_to_ex)
     );
 
 
 
     
+    // ... (existing assignments and module instantiations) ...
 
+    // --- Assignments for New Debug Outputs ---
+    // IF Stage
+    assign debug_if_pc_current      = pc_current_to_ifid; // PC going into IF/ID
+    assign debug_if_instruction_out = instruction_to_ifid; // Instruction going into IF/ID
 
+    // IF/ID Register Outputs
+    assign debug_ifid_instruction    = instruction_to_id;
+    assign debug_ifid_pc             = pc_current_to_id;
+    assign debug_ifid_enable_write_actual = !ifid_stall; // What actually controls the write
+
+    // ID Stage Outputs (Inputs to ID/EX Register)
+    assign debug_id_rdata1          = rdata1_to_ex;
+    assign debug_id_rdata2          = rdata2_to_ex;
+    assign debug_id_imm32           = imm32_to_ex;
+    assign debug_id_rd_addr         = rd_addr_from_id; // Output from ID stage before ID/EX reg
+    assign debug_id_rs1_addr        = rs1_addr_from_id;
+    assign debug_id_rs2_addr        = rs2_addr_from_id;
+    assign debug_id_regWrite_ctrl   = regWrite_ctrl_to_ex;
+    assign debug_id_ALUOp_ctrl      = ALUOp_ctrl_to_ex;
+    assign debug_id_ALUSrc_ctrl     = ALUSrc_ctrl_to_ex;
+    assign debug_id_branch_ctrl     = branch_ctrl_to_ex;
+    assign debug_id_jump_ctrl       = jump_ctrl_to_ex;
+    assign debug_id_isLoad_ctrl     = isLoad_ctrl_to_ex;
+    assign debug_id_isStore_ctrl    = isStore_ctrl_to_ex;
+
+    // ID/EX Register Outputs
+    assign debug_idex_pc             = pc_idex_to_ex;
+    assign debug_idex_rd_addr        = rd_addr_idex_to_ex;
+    assign debug_idex_rs1_addr       = rs1_addr_idex_to_ex;
+    assign debug_idex_rs2_addr       = rs2_addr_idex_to_ex;
+    assign debug_idex_rdata1         = rdata1_idex_to_ex;
+    assign debug_idex_rdata2         = rdata2_idex_to_ex;
+    assign debug_idex_imm32          = imm32_idex_to_ex;
+    assign debug_idex_regWrite_ctrl  = regWrite_ctrl_idex_to_ex;
+    assign debug_idex_ALUOp_ctrl     = ALUOp_ctrl_idex_to_ex;
+    assign debug_idex_ALUSrc_ctrl    = ALUSrc_ctrl_idex_to_ex;
+    assign debug_idex_branch_ctrl    = branch_ctrl_idex_to_ex;
+    assign debug_idex_jump_ctrl      = jump_ctrl_idex_to_ex;
+    assign debug_idex_isLoad_ctrl    = isLoad_ctrl_idex_to_ex;
+    assign debug_idex_isStore_ctrl   = isStore_ctrl_idex_to_ex;
+    assign debug_idex_forwardA       = forwardA_to_ex; // from IDEX reg output
+    assign debug_idex_forwardB       = forwardB_to_ex; // from IDEX reg output
+    assign debug_idex_enable_write_actual = idex_enable_write; // What actually controls the write
+    assign debug_idex_flush_actual   = idex_flush; // Actual flush signal to IDEX
+
+    // EX Stage Outputs
+    assign debug_ex_alu_result    = alu_result_to_exmem;
+    assign debug_ex_rd_addr       = rd_addr_to_exmem;
+    assign debug_ex_regWrite_ctrl = RegWrite_ctrl_to_exmem;
+    assign debug_ex_MemRead_ctrl  = MemRead_to_exmem;
+    assign debug_ex_MemWrite_ctrl = MemWrite_to_exmem;
+    assign debug_ex_MemToReg_ctrl = MemToReg_to_exmem;
+    assign debug_ex_branch_taken  = branch; // branch_or_jump_to_if
+    assign debug_ex_target_pc     = target_pc_in_if;
+
+    // EX/MEM Register Outputs
+    assign debug_exmem_alu_result    = alu_result_to_mem;
+    assign debug_exmem_rd_addr       = rd_addr_to_mem;
+    assign debug_exmem_rdata2_store  = rdata2_for_store_to_mem;
+    assign debug_exmem_regWrite_ctrl = final_RegWrite_ctrl; // This is RegWrite from EXMEM to MEM
+    assign debug_exmem_MemRead_ctrl  = MemRead_ctrl_to_mem;
+    assign debug_exmem_MemWrite_ctrl = MemWrite_ctrl_to_mem;
+    assign debug_exmem_IORead_ctrl   = IORead_ctrl_to_mem;    // Added
+    assign debug_exmem_IOWrite_ctrl  = IOWrite_ctrl_to_mem;   // Added
+    assign debug_exmem_MemToReg_ctrl = MemToReg_ctrl_to_mem;
+
+    // MEM Stage Outputs
+    assign debug_mem_data_read       = data_read_to_wb; // Data from MemOrIO to MEMWB reg
+
+    // MEM/WB Register Outputs
+    assign debug_memwb_alu_result    = alu_result_to_wb;
+    assign debug_memwb_data_read     = data_read_memwb_to_wb; // Corrected wire name based on your MEMWB instance
+    assign debug_memwb_rd_addr       = rd_addr_to_wb;
+    assign debug_memwb_regWrite_ctrl = final_RegWrite_ctrl_to_wb;
+    assign debug_memwb_MemToReg_ctrl = MemToReg_ctrl_to_wb;
+
+    // WB Stage Outputs
+    assign debug_wb_writeData        = write_data_from_wb;
+    assign debug_wb_writeAddr        = write_addr_from_wb;
+    assign debug_wb_regWriteEnable   = reg_write_enable_from_wb;
+
+    // Hazard Unit Signals
+    assign debug_stall_if_internal       = stall_if;
+    assign debug_ifid_stall_internal     = ifid_stall;
+    assign debug_idex_flush_internal     = idex_flush; // This is idex_nop from DataHazardDetect
+    assign debug_forwardA_from_fwd_unit  = forwardA_to_ex; // Direct output of ForwardingUnit
+    assign debug_forwardB_from_fwd_unit  = forwardB_to_ex; // Direct output of ForwardingUnit
 
 endmodule
+
+    // ... (localparams and existing wire declarations remain the same) ...
+    // You already have most of the internal wires declared. We just need to assign them.

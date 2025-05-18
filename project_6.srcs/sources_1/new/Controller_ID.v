@@ -42,7 +42,8 @@ module Controller_ID (
     localparam ALUOP_BRANCH_CMP = 4'b1011; // Branch: Perform comparison
     localparam ALUOP_NOP      = 4'b1111; // No operation / Invalid
 
-    localparam F7_SUB_SRA = 7'b0100000; // for SUB, SRA, SRAI
+    // localparam F7_SUB_SRA = 7'b0100000; // for SUB, SRA, SRAI
+    localparam F7_SUB_SRA = 7'h20; // for SUB, SRA, SRAI
     localparam F7_ADD_SRL = 7'b0000000; // for ADD, SRL, SLLI, SRLI
 
     always @(*) begin

@@ -25,6 +25,9 @@ module IDEX_PipelineRegister (
     input        isStore_ctrl_from_id,
     input        isEcall_ctrl_from_id,
 
+    input [1:0]  forwardA_from_id,
+    input [1:0]  forwardB_from_id,
+
     // --- 输出到EX阶段 ---
     // 数据通路值
     output reg [31:0] rdata1_to_ex,
@@ -39,12 +42,14 @@ module IDEX_PipelineRegister (
     // 控制信号
     output reg        regWrite_ctrl_to_ex,
     output reg        ALUSrc_ctrl_to_ex,
-    output reg [4:0]  ALUOp_ctrl_to_ex,
+    output reg [3:0]  ALUOp_ctrl_to_ex,
     output reg        branch_ctrl_to_ex,
     output reg        jump_ctrl_to_ex,
     output reg        isLoad_ctrl_to_ex,
     output reg        isStore_ctrl_to_ex,
-    output reg        isEcall_ctrl_to_ex
+    output reg        isEcall_ctrl_to_ex,
+    output reg [1:0]  forwardA_to_ex,
+    output reg [1:0]  forwardB_to_ex
 );
 
     // 定义NOP（空操作）时的控制信号值
@@ -80,6 +85,8 @@ module IDEX_PipelineRegister (
             isLoad_ctrl_to_ex    <= CTL_NOP_ISLOAD;
             isStore_ctrl_to_ex   <= CTL_NOP_ISSTORE;
             isEcall_ctrl_to_ex   <= CTL_NOP_ISECALL;
+            forwardA_to_ex       <= 2'b00; // 默认转发信号
+            forwardB_to_ex       <= 2'b00; // 默认转发信号
 
         end else if (enable_write) begin // 如果允许写入（EX阶段没有暂停）
             // 锁存从ID阶段传来的数据和控制信号
@@ -100,6 +107,8 @@ module IDEX_PipelineRegister (
             isLoad_ctrl_to_ex    <= isLoad_ctrl_from_id;
             isStore_ctrl_to_ex   <= isStore_ctrl_from_id;
             isEcall_ctrl_to_ex   <= isEcall_ctrl_from_id;
+            forwardA_to_ex       <= forwardA_from_id;
+            forwardB_to_ex       <= forwardB_from_id;
         end
         // 如果 enable_write 为0 (EX阶段暂停), 则寄存器保持原值
     end
