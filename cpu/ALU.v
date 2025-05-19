@@ -20,19 +20,19 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module ALU (
-    input [31:0] ReadData1,
-    input [31:0] ReadData2,
+    input [31:0] read_data1,
+    input [31:0] read_data2,
     input [31:0] imm32,
     input [1:0] ALUOp,
     input [2:0] funct3,
     input [6:0] funct7,
     input ALUSrc,
-    output reg [31:0] ALUResult,
+    output reg [31:0] ALU_reslult,
     output zero
 );
 
 reg [3:0] ALUControl;
-wire [31:0] operand2 = ALUSrc ? imm32 : ReadData2;
+wire [31:0] operand2 = ALUSrc ? imm32 : read_data2;
 
 always @* begin
     case(ALUOp)
@@ -52,15 +52,15 @@ end
 
 always @* begin
     case(ALUControl)
-        4'b0010: ALUResult = ReadData1 + operand2; // add
-        4'b0110: ALUResult = ReadData1 - operand2; // sub
-        4'b0000: ALUResult = ReadData1 & operand2; // and
-        4'b0001: ALUResult = ReadData1 | operand2; // or
-        default: ALUResult = 32'b0; // default to 0
+        4'b0010: ALU_reslult = read_data1 + operand2; // add
+        4'b0110: ALU_reslult = read_data1 - operand2; // sub
+        4'b0000: ALU_reslult = read_data1 & operand2; // and
+        4'b0001: ALU_reslult = read_data1 | operand2; // or
+        default: ALU_reslult = 32'b0; // default to 0
     endcase
 end
 
 // Generate zero signal
-assign zero = (ALUResult == 32'b0);
+assign zero = (ALU_reslult == 32'b0);
 
 endmodule
