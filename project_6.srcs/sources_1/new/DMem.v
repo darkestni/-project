@@ -27,8 +27,9 @@ module DMem(
     input [31:0] din, 
     output[31:0] dout
 );
-    RAM udram(.clka(clk), .wea(MemWrite), .addra(addr[13:0]), .dina(din), .douta(from_dmem));
     wire [31:0] from_dmem;
     assign dout = MemRead ? from_dmem : 32'b0;
+    RAM udram(.clka(clk), .wea(MemWrite), .addra(addr[13:0]), .dina(din), .douta(from_dmem));
+
 
 endmodule
