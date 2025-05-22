@@ -44,6 +44,8 @@ module Execute_Stage_Wrapper (
     output            MemToReg_ctrl_to_exmem,    // 由Controller_EX生成
     // output reg        isEcall_ctrl_to_exmem,
     // output reg [1:0]  ecall_type_to_exmem,
+    output reg  [31:0] alu_operand_a,
+    output reg  [31:0] alu_operand_b,
 
     // --- 输出到 IF阶段 (用于PC更新) / Hazard Unit ---
     output reg        branch_or_jump_to_if,
@@ -51,8 +53,8 @@ module Execute_Stage_Wrapper (
 );
 
     // 内部信号线
-    reg  [31:0] alu_operand_a;
-    reg  [31:0] alu_operand_b;
+    // reg  [31:0] alu_operand_a;
+    // reg  [31:0] alu_operand_b;
     wire [31:0] alu_arith_logic_result_internal; // ALU自身的算术逻辑运算结果
     wire        alu_zero_flag;
     wire [31:0] rs2_value; //从rdata2_from_idex和forwardB给回的数据中选择

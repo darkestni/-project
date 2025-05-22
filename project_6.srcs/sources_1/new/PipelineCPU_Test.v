@@ -7,6 +7,7 @@ module PipelineCPU_Test (
     output wire [31:0] x2,
     output wire [31:0] x3,
     output wire [31:0] x4,
+    output wire [31:0] x5,
 
     input debugMode,
     input [31:0] testScenario,
@@ -68,6 +69,8 @@ module PipelineCPU_Test (
     output wire        debug_ex_MemToReg_ctrl,
     output wire        debug_ex_branch_taken,      // branch_or_jump_to_if
     output wire [31:0] debug_ex_target_pc,
+    output wire [31:0] ex_alu_operand_a,
+    output wire [31:0] ex_alu_operand_b,
 
     // EX/MEM Register Outputs (Inputs to MEM Stage)
     output wire [31:0] debug_exmem_alu_result,
@@ -163,7 +166,7 @@ module PipelineCPU_Test (
         .debugMode(debugMode),
         .testScenario(testScenario),
         // .bram_instruction_data(debug_if_instruction_from_prgrom), // 来自指令存储器的指令
-        .instruction_to_ifid(instruction_to_ifid),
+        .bram_instruction_data(instruction_to_ifid),
         .pc_current_to_ifid(pc_current_to_ifid)
         // .pc_plus_4_to_ifid(pc_plus_4_to_ifid) 
     );
@@ -257,6 +260,7 @@ module PipelineCPU_Test (
         .x2(x2),
         .x3(x3),
         .x4(x4),
+        .x5(x5),
 
 
         //output
@@ -401,6 +405,10 @@ module PipelineCPU_Test (
         .memwb_write_to_reg(write_data_from_wb),
         .exmem_alu_result(alu_result_to_mem),
         //output
+    // reg  [31:0] alu_operand_a;
+    // reg  [31:0] alu_operand_b;
+        .alu_operand_a(ex_alu_operand_a),
+        .alu_operand_b(ex_alu_operand_b),
         .alu_result_addr_to_exmem(alu_result_to_exmem),
         .rdata2_for_store_to_exmem(rdata2_for_store_to_exmem),
         .rd_addr_to_exmem(rd_addr_to_exmem),
@@ -557,14 +565,34 @@ module PipelineCPU_Test (
         );
 
         DataHazardDetect u_data_hazard (
-            .idex_isLoad(isLoad_ctrl_idex_to_ex),
-            .idex_rd_addr(rd_addr_idex_to_ex),
-            .ifid_rs1_addr(rs1_addr_from_id),
-            .ifid_rs2_addr(rs2_addr_from_id),
+            .ex_isLoad(MemRead_to_exmem || IORead_to_exmem),
+            .ex_rd_addr(rd_addr_to_exmem),
+            .id_rs1_addr(rs1_addr_from_id),
+            .id_rs2_addr(rs2_addr_from_id),
             .pc_stall(stall_if),
             .ifid_stall(ifid_stall), // 占位
             .idex_nop(idex_nop) 
         );
+//         module DataHazardDetect (
+//     // Inputs from ID/EX pipeline register (EX stage's current instruction info)
+//     input        exmem_isLoad,    // Is the instruction currently in EX a Load?
+//     input [4:0]  exmem_rd_addr,   // Destination register of the instruction in EX
+
+//     // Inputs from IF/ID pipeline register (ID stage's current instruction info)
+//     // More accurately, these should be the rs1/rs2 from the instruction *currently in ID*,
+//     // which are the outputs of the ID stage's decoder, *before* they get latched by ID/EX.
+//     // Your connections: .id_rs1_addr(rs1_addr_from_id), .id_rs2_addr(rs2_addr_from_id)
+//     // This is correct if rs1_addr_from_id and rs2_addr_from_id are the decoded source
+//     // register addresses of the instruction currently being processed in the ID stage.
+//     input [4:0]  id_rs1_addr,  // rs1 of the instruction currently in ID
+//     input [4:0]  id_rs2_addr,  // rs2 of the instruction currently in ID
+
+//     // Outputs to control pipeline
+//     output reg pc_stall,       // Stall the PC and IF stage
+//     output reg ifid_stall,     // Stall the IF/ID register (disable write)
+//     output reg idex_nop        // Insert NOP into ID/EX register (effectively flush ID's output)
+// );
+
 
         // assign stall_if = !(ifid_enable_write && idex_enable_write);
         // assign ifid_flush_ifid = !(stall_if && branch_condition_met_to_exmem);

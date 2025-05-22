@@ -12,6 +12,8 @@ module RegisterFile (
     output [31:0] x2,
     output [31:0] x3,
     output [31:0] x4,
+    output [31:0] x5,
+
 
 
     output [31:0] read_data2_id
@@ -37,5 +39,6 @@ module RegisterFile (
     assign x2 = registers[2];
     assign x3 = registers[3];
     assign x4 = registers[4];
+    assign x5 = registers[5];
 
 endmodule

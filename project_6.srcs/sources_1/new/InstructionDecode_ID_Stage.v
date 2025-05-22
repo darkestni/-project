@@ -29,6 +29,7 @@ module InstructionDecode_ID_Stage (
     output [31:0] x2,
     output [31:0] x3,
     output [31:0] x4,
+    output [31:0] x5,
 
     // --- 输出到 ID/EX 流水线寄存器 (来自Controller_ID的控制信号) ---
     output regWrite_ctrl_to_ex,
@@ -101,7 +102,7 @@ module InstructionDecode_ID_Stage (
         .x2(x2),
         .x3(x3),
         .x4(x4),
-
+        .x5(x5),
         .read_data2_id(rdata2_to_ex)
     );
 
