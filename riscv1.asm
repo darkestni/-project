@@ -7,6 +7,7 @@
 
 _start:
     # 读取 SWITCH 输入
+    
     lui   t0, 0xFFFFF
     addi  t0, t0, 0x010       # t0 = 0xFFFFF010
     lw    t1, 0(t0)           # t1 = sw[10:0]
@@ -33,8 +34,10 @@ _start:
     #  设置确认按钮
     li   x8,  2048   #  sw11
     
+    
     # 等待用户按下确认按钮
 wait_confirm:
+  sw   x0, 0(t0)
   lw   t1, 0(t0)
   and x9,  t1,  x8
   beq x9,x8, case_dispatch
@@ -68,7 +71,7 @@ wait_confirm:
 # case0: 显示 sw[7:0]
 case0:
     andi  x5, t1, 0xFF
-    j     display
+    j     display_seg
 
 # case1: 保存 a，lb 加载，符号扩展
 case1:
@@ -76,7 +79,7 @@ case1:
     addi  x10, x10, 0x010     # x10 = 0x00001010
     sb    x1, 0(x10)
     lb    x5, 0(x10)
-    j     display
+    j     display_seg
 
 # case2: 保存 a，lbu 加载，零扩展
 case2:
@@ -90,19 +93,19 @@ case2:
 case3:
     beq   x1, x2, led_on
     li    x5, 0
-    j     display
+    j     display_led
 
 # case4: a < b（有符号）
 case4:
     blt   x1, x2, led_on
     li    x5, 0
-    j     display
+    j     display_led
 
 # case5: a < b（无符号）
 case5:
     bltu  x1, x2, led_on
     li    x5, 0
-    j     display
+    j     display_led
 
 # case6: slt（signed）
 case6:
@@ -111,7 +114,7 @@ case6:
     addi  x10, x10, 0x014
     sw    x5, 0(x10)
     lw    x5, 0(x10)
-    j     display
+    j     display_seg
 
 # case7: sltu（unsigned）
 case7:
@@ -120,21 +123,25 @@ case7:
     addi  x10, x10, 0x014
     sw    x5, 0(x10)
     lw    x5, 0(x10)
-    j     display
+    j     display_seg
 
 # LED 全亮（x5 = 0xFF）
 led_on:
     li    x5, 0xFF
-    j     display
+    j     display_led
 
-# 显示 x5 到 LED（t6）和 SEG（t7）
-display:
-    sw    x5, 0(t6)           # LED 显示
+# 显示 x5 到 LED（t6）
+display_led:
+    sw    x5, 0(t6)
+    j     end
+
+# 显示 x5 到 SEG（t7）
+display_seg:
     lui   x7, 0xFFFFF
-    addi  x7, x7, 0x020       # x7 = 0xFFFFF020
-    sw    x5, 0(x7)           # 数码管显示
+    addi  x7, x7, 0x020       # t7 = 0xFFFFF020
+    sw    x5, 0(x7)
     j     end
 
 # 程序结束，死循环
 end:
-    j     end
+    j    wait_confirm
