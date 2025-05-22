@@ -27,7 +27,7 @@ module ALU (
     input [2:0] funct3,
     input [6:0] funct7,
     input ALUSrc,
-    output reg [31:0] ALU_reslult,
+    output reg [31:0] ALU_result,
     output zero
 );
 
@@ -52,15 +52,15 @@ end
 
 always @* begin
     case(ALUControl)
-        4'b0010: ALU_reslult = read_data1 + operand2; // add
-        4'b0110: ALU_reslult = read_data1 - operand2; // sub
-        4'b0000: ALU_reslult = read_data1 & operand2; // and
-        4'b0001: ALU_reslult = read_data1 | operand2; // or
-        default: ALU_reslult = 32'b0; // default to 0
+        4'b0010: ALU_result = read_data1 + operand2; // add
+        4'b0110: ALU_result = read_data1 - operand2; // sub
+        4'b0000: ALU_result = read_data1 & operand2; // and
+        4'b0001: ALU_result = read_data1 | operand2; // or
+        default: ALU_result = 32'b0; // default to 0
     endcase
 end
 
 // Generate zero signal
-assign zero = (ALU_reslult == 32'b0);
+assign zero = (ALU_result == 32'b0);
 
 endmodule

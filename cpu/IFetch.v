@@ -10,10 +10,10 @@ always @(posedge clk) begin
     
     if (pc === 32'bx) 
         pc <= 32'h00000000;
-    // ·ÖÖ§ÅÐ¶Ï
+    // ¡¤??¡ì????
     else if (branch && zero)
         pc <= pc + imm32;
-    // Ë³ÐòÖ´ÐÐ
+    // ???¨°????
     else 
         pc <= pc + 4;
 end

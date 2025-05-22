@@ -31,7 +31,7 @@ module DMem(
 );
     wire [3:0]  byte_sel;               // 字节选择掩码（根据地址低2位和操作宽度生成）
     wire [31:0] ram_dout; 
-    RAM udram(.clka(clk), .wea(MemWrite ? byte_sel : 4'b0), .addra(addr[15:2]), .dina(din), .douta(ram_dout));
+    blk_mem_gen_0 udram(.clka(clk), .wea(MemWrite ? byte_sel : 4'b0), .addra(addr[15:2]), .dina(din), .douta(ram_dout));
     
     assign byte_sel =  //ai辅助生成逻辑
         (mem_width == 2'b10) ? 4'b1111 :  // 字操作（sw）：写全部4字节

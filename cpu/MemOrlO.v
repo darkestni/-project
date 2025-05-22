@@ -5,7 +5,7 @@ module MemOrIO(
     input        ioWrite,     // IO Write Enable
     input  [31:0] addr_in,     // Address input from ALU
     input  [31:0] m_rdata,     // Data read from Memory
-    input  [15:0] io_rdata,    // Data read from IO (only 16 bits valid)
+    input  [10:0] io_rdata,    // Data read from IO (only 16 bits valid)
     output [31:0] r_wdata,     // Data to register file (from memory or IO)
     input  [31:0] r_rdata,     // Data from register file (to be written to memory/IO)
     output reg [31:0] write_data, // Data to write into memory or IO
@@ -21,7 +21,7 @@ assign LEDCtrl    = (addr_in == 32'hFFFF_F000);
 // write back to reg
 
 assign r_wdata = (mRead)  ? m_rdata :
-                 (ioRead) ? {16'h0000, io_rdata} :
+                 (ioRead) ? {24'h0000, io_rdata[7:0]} :
                  32'h0000_0000; 
 
 
