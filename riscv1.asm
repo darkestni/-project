@@ -1,37 +1,53 @@
-.data
-input_addr:   .word 0xFFFFF010
-led_addr:     .word 0xFFFFF000
-seg_addr:     .word 0xFFFFF020
 
-data_a:       .space 4
-data_result:  .word 0
+
+
 
 .text
 .globl _start
 
 _start:
-    # IO 开关输入 
-    lui   t0, 0x00001
-    addi  t0, t0, 0x000          # t0 = 0x00001000
-    lw    t0, 0(t0)              # t0 = 0xFFFFF010
-    lw    t1, 0(t0)              # t1 = sw[10:0]
+    # 读取 SWITCH 输入
+    lui   t0, 0xFFFFF
+    addi  t0, t0, 0x010       # t0 = 0xFFFFF010
+    lw    t1, 0(t0)           # t1 = sw[10:0]
 
-    # case、a、b 
+    # 提取 case（x3），a（x1），b（x2）
     srli  x3, t1, 8
-    andi  x3, x3, 0x7            # x3 = case
+    andi  x3, x3, 0x7         # x3 = sw[10:8]
 
-    andi  x1, t1, 0xF
+    andi  x1, t1, 0xF         # a = sw[3:0]
     slli  x1, x1, 28
-    srai  x1, x1, 28            # a = sw[3:0] (sign extend)
+    srai  x1, x1, 28          # 符号扩展
 
     srli  t2, t1, 4
-    andi  x2, t2, 0xF
+    andi  x2, t2, 0xF         # b = sw[7:4]
     slli  x2, x2, 28
-    srai  x2, x2, 28            # b = sw[7:4] (sign extend)
+    srai  x2, x2, 28          # 符号扩展
 
-    li    x31, 0xFFFFF000       # LED地址
+    # LED 地址 → t6
+    lui   t6, 0xFFFFF
+    addi  t6, t6, 0x000       # t6 = 0xFFFFF000
+    
+    
+    
+    #  设置确认按钮
+    li   x8,  2048   #  sw11
+    
+    # 等待用户按下确认按钮
+wait_confirm:
+  lw   t1, 0(t0)
+  and x9,  t1,  x8
+  beq x9,x8, case_dispatch
+  j wait_confirm
+  
+          
+    
 
-    # 跳转 
+
+    # 跳转到对应 case
+    
+    case_dispatch:
+    
     beq   x3, x0, case0
     li    x5, 1
     beq   x3, x5, case1
@@ -49,20 +65,20 @@ _start:
     beq   x3, x5, case7
     j     end
 
-# case0: 显示 sw[7:0] 
+# case0: 显示 sw[7:0]
 case0:
     andi  x5, t1, 0xFF
     j     display
 
-# case1: 保存 a，lb 加载，符号扩展输出 
+# case1: 保存 a，lb 加载，符号扩展
 case1:
     lui   x10, 0x00001
-    addi  x10, x10, 0x010       # x10 = 0x00001010
+    addi  x10, x10, 0x010     # x10 = 0x00001010
     sb    x1, 0(x10)
     lb    x5, 0(x10)
     j     display
 
-#  case2: 保存 a，lbu 加载，零扩展输出 
+# case2: 保存 a，lbu 加载，零扩展
 case2:
     lui   x10, 0x00001
     addi  x10, x10, 0x010
@@ -70,25 +86,25 @@ case2:
     lbu   x5, 0(x10)
     j     display
 
-# case3: 判断 a == b 
+# case3: 判断 a == b
 case3:
     beq   x1, x2, led_on
     li    x5, 0
     j     display
 
-#  case4: a < b (signed) 
+# case4: a < b（有符号）
 case4:
     blt   x1, x2, led_on
     li    x5, 0
     j     display
 
-# case5: a < b (unsigned) 
+# case5: a < b（无符号）
 case5:
     bltu  x1, x2, led_on
     li    x5, 0
     j     display
 
-#  case6: slt (signed) 
+# case6: slt（signed）
 case6:
     slt   x5, x1, x2
     lui   x10, 0x00001
@@ -97,7 +113,7 @@ case6:
     lw    x5, 0(x10)
     j     display
 
-# case7: sltu (unsigned) 
+# case7: sltu（unsigned）
 case7:
     sltu  x5, x1, x2
     lui   x10, 0x00001
@@ -106,18 +122,19 @@ case7:
     lw    x5, 0(x10)
     j     display
 
-# LED 点亮时使用 x5 = 0xFF 
+# LED 全亮（x5 = 0xFF）
 led_on:
     li    x5, 0xFF
     j     display
 
-# 显示结果到 LED 和数码管 
+# 显示 x5 到 LED（t6）和 SEG（t7）
 display:
-    sw    x5, 0(x31)            # LED 显示
-    li    t6, 0xFFFFF020
-    sw    x5, 0(t6)             # 数码管显示
+    sw    x5, 0(t6)           # LED 显示
+    lui   x7, 0xFFFFF
+    addi  x7, x7, 0x020       # x7 = 0xFFFFF020
+    sw    x5, 0(x7)           # 数码管显示
     j     end
 
-# 死循环结束 
+# 程序结束，死循环
 end:
     j     end
