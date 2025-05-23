@@ -32,7 +32,8 @@ always @(*) begin
         // 4'b1111: segOut = write_data_to_seg; //时钟计数器
         // default: segOut = write_data_to_seg; //默认输出
         3'b000: segOut = x1_2;
-        3'b001: segOut = x3_4;
+        // 3'b001: segOut = x3_4;
+        3'b001: segOut = 32'h12435678;
         3'b010: segOut = x5;
         3'b011: segOut = ifid_instruction;
         3'b100: segOut = datahazard_detect_stall_pc_ifid_idexnop; //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop 4-5是forwardA 6-7 forwardB 8whether jump

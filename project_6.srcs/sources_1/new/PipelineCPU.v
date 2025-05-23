@@ -418,6 +418,7 @@ module PipelineCPU (
         .clk_count(clk_count)
     );
 
+
     // --- Assignments for Debug Outputs ---
     assign dbg_ifid_instruction = instruction_to_id;
     assign dbg_if_pc            = pc_current_to_id;

@@ -82,25 +82,50 @@ module IOModule #(
 
     // I/O写操作 (同步逻辑)
     // 当 io_access_write_enable 有效时，根据 io_address 决定向哪个设备写入数据
+    // always @(posedge clk or posedge reset) begin
+    //     // 如果需要复位LED和数码管的状态，可以在这里添加reset逻辑
+    //     if (reset) begin
+    //        led_physical_out <= {LED_WIDTH{1'b0}}; // 例如：全灭
+    //        seg_data_out <= 32'b0; // 例如：共阳极全灭
+    //     end else
+    //     led_physical_out <= led_physical_out; // 保持LED状态
+    //     if (io_access_write_enable) begin
+    //         case (io_address)
+    //             LED_ADDR:  if (led_write_enable) led_physical_out <= io_writeData[LED_WIDTH-1:0];
+    //             SEG_ADDR: begin
+    //                 seg_data_out <= io_writeData[31:0]; // 直接写入数码管数据
+    //             end
+    //             // default: no operation for other addresses within I/O space
+    //         endcase
+    //     // } else { // 当 io_access_write_enable 为低时，可以选择保持输出或赋默认值
+    //         // 如果不希望在非写周期改变LED/数码管状态，则此else块可以省略，寄存器会保持值
+    //     // }
+    //     end
+    // end
+        // I/O写操作 (同步逻辑)
     always @(posedge clk or posedge reset) begin
-        // 如果需要复位LED和数码管的状态，可以在这里添加reset逻辑
         if (reset) begin
-           led_physical_out <= {LED_WIDTH{1'b0}}; // 例如：全灭
-           seg_data_out <= 32'b0; // 例如：共阳极全灭
-        end else
-        led_physical_out <= led_physical_out; // 保持LED状态
-        if (io_access_write_enable) begin
-            case (io_address)
-                LED_ADDR:  if (led_write_enable) led_physical_out <= io_writeData[LED_WIDTH-1:0];
-                SEG_ADDR: begin
-                    seg_data_out <= io_writeData[31:0]; // 直接写入数码管数据
+            led_physical_out <= {LED_WIDTH{1'b0}};
+            seg_data_out     <= 32'b0;
+        end else begin
+            // 默认保持上一个周期的值，除非有写操作覆盖
+            // led_physical_out <= led_physical_out; // Verilog中reg默认会保持值
+            // seg_data_out     <= seg_data_out;
+
+            if (io_access_write_enable) begin
+                if (io_address == LED_ADDR && led_write_enable) begin
+                    led_physical_out <= io_writeData[LED_WIDTH-1:0];
                 end
-                // default: no operation for other addresses within I/O space
-            endcase
-        // } else { // 当 io_access_write_enable 为低时，可以选择保持输出或赋默认值
-            // 如果不希望在非写周期改变LED/数码管状态，则此else块可以省略，寄存器会保持值
-        // }
+                // No else for led_physical_out here, means it holds if condition not met
+
+                if (io_address == SEG_ADDR) begin
+                    seg_data_out <= io_writeData[31:0];
+                end
+                // No else for seg_data_out here, means it holds if condition not met
+            end
+            // 如果 io_access_write_enable 为0, led_physical_out 和 seg_data_out 都会保持它们的值
         end
     end
+
 
 endmodule
