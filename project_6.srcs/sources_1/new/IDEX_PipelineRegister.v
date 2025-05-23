@@ -14,7 +14,8 @@ module IDEX_PipelineRegister (
     input [4:0]  rs2_addr_from_id,
     input [31:0] pc_from_id,
     input [1:0]  ecall_type_from_id,
-
+    input [6:0]  funct7_from_id,
+    input [2:0]  funct3_from_id,
     // 控制信号
     input        regWrite_ctrl_from_id,
     input        ALUSrc_ctrl_from_id,
@@ -35,7 +36,8 @@ module IDEX_PipelineRegister (
     output reg [4:0]  rs2_addr_to_ex,
     output reg [31:0] pc_to_ex,
     output reg [1:0]  ecall_type_to_ex,
-
+    output reg [6:0]  funct7_to_ex,
+    output reg [2:0]  funct3_to_ex,
     // 控制信号
     output reg        regWrite_ctrl_to_ex,
     output reg        ALUSrc_ctrl_to_ex,
@@ -80,6 +82,8 @@ module IDEX_PipelineRegister (
             isLoad_ctrl_to_ex    <= CTL_NOP_ISLOAD;
             isStore_ctrl_to_ex   <= CTL_NOP_ISSTORE;
             isEcall_ctrl_to_ex   <= CTL_NOP_ISECALL;
+            funct3_to_ex        <= 3'b0;
+            funct7_to_ex        <= 7'b0;
 
         end else if (enable_write) begin // 如果允许写入（EX阶段没有暂停）
             // 锁存从ID阶段传来的数据和控制信号
@@ -100,6 +104,8 @@ module IDEX_PipelineRegister (
             isLoad_ctrl_to_ex    <= isLoad_ctrl_from_id;
             isStore_ctrl_to_ex   <= isStore_ctrl_from_id;
             isEcall_ctrl_to_ex   <= isEcall_ctrl_from_id;
+            funct3_to_ex        <= funct3_from_id;
+            funct7_to_ex        <= funct7_from_id;
         end
         // 如果 enable_write 为0 (EX阶段暂停), 则寄存器保持原值
     end

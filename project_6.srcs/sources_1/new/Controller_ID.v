@@ -11,7 +11,7 @@ module Controller_ID (
     output reg branch_o,
     output reg jump_o,
     output reg isLoad_o,
-    // output reg isEcall_o ,
+    // output reg isEcall_o,
     output reg isStore_o
 
 );
@@ -25,7 +25,7 @@ module Controller_ID (
     localparam OPCODE_JALR    = 7'b1100111;
     localparam OPCODE_JAL     = 7'b1101111;
     localparam OPCODE_AUIPC   = 7'b0010111;
-    // localparam OPCODE_LUI     = 7'b0110111; // LUI removed
+    localparam OPCODE_LUI     = 7'b0110111; // LUI removed
     // localparam OPCODE_ECALL   = 7'b1110011; // ECALL removed
 
     localparam ALUOP_ADD      = 4'b0000; // Add
@@ -38,7 +38,7 @@ module Controller_ID (
     localparam ALUOP_SRA      = 4'b0111; // Shift Right Arithmetic
     localparam ALUOP_OR       = 4'b1000; // OR
     localparam ALUOP_AND      = 4'b1001; // AND
-    // localparam ALUOP_LUI_PASS_B = 4'b1010; 
+    localparam ALUOP_LUI = 4'b1010; 
     localparam ALUOP_BRANCH_CMP = 4'b1011; // Branch: Perform comparison
     localparam ALUOP_NOP      = 4'b1111; // No operation / Invalid
 
@@ -123,6 +123,11 @@ module Controller_ID (
                 regWrite_o = 1'b1;
                 ALUSrc_o   = 1'b1; // PC is rs1_data, U_imm is imm_data
                 ALUOp_o    = ALUOP_ADD;
+            end
+            OPCODE_LUI: begin // rd = U_imm
+                regWrite_o = 1'b1;
+                ALUSrc_o   = 1'b1; // U_imm is imm_data
+                ALUOp_o    = ALUOP_LUI; // LUI is a special case, but we can treat it as ADD for simplicity
             end
 
             default: begin // LUI, ECALL, and other opcodes

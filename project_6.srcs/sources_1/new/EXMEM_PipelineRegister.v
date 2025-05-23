@@ -30,6 +30,8 @@ module EXMEM_PipelineRegister (
     input        IOWrite_ctrl_from_ex,        // I/O写使能
     input        MemToReg_ctrl_from_ex,       // 选择写回寄存器的数据来源 (ALU结果 vs 内存/IO数据)
 
+    input [2:0] funct3_from_ex, 
+    input [6:0] funct7_from_ex,
 
     // --- 输出信号 (送往MEM阶段) ---
     // 数据通路值
@@ -37,6 +39,8 @@ module EXMEM_PipelineRegister (
     output reg [31:0] branch_target_addr_to_mem,
     output reg [31:0] rdata2_for_store_to_mem,
     output reg [4:0]  rd_addr_to_mem,
+    output reg [2:0] funct3_to_mem,
+    output reg [6:0] funct7_to_mem,
     // output reg [31:0] pc_to_mem,
     // output reg [31:0] pc_plus_4_to_mem,
 
@@ -80,6 +84,8 @@ module EXMEM_PipelineRegister (
             IORead_ctrl_to_mem         <= CTL_NOP_IOREAD;
             IOWrite_ctrl_to_mem        <= CTL_NOP_IOWRITE;
             MemToReg_ctrl_to_mem       <= CTL_NOP_MEMTOREG;
+            funct3_to_mem            <= 3'b0;
+            funct7_to_mem            <= 7'b0;
 
         end else if (enable_write) begin
             // 如果允许写入 (MEM阶段没有暂停)，则锁存来自EX阶段的信号
@@ -98,6 +104,8 @@ module EXMEM_PipelineRegister (
             IORead_ctrl_to_mem         <= IORead_ctrl_from_ex;
             IOWrite_ctrl_to_mem        <= IOWrite_ctrl_from_ex;
             MemToReg_ctrl_to_mem       <= MemToReg_ctrl_from_ex;
+            funct3_to_mem             <= funct3_from_ex;
+            funct7_to_mem             <= funct7_from_ex;
         end
         // else if (!enable_write), 寄存器保持不变 (stall)
     end

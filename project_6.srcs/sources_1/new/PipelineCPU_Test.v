@@ -245,6 +245,8 @@ module PipelineCPU_Test (
     wire [1:0] ecall_type_to_ex;
     wire [4:0] rd_addr_from_id;
     wire [4:0] rs1_addr_from_id;
+    wire [2:0] funct3_from_id;
+    wire [6:0] funct7_from_id;
     // wire [4:0] rs2_addr_from_id;
     InstructionDecode_ID_Stage u_id_stage (
         .clk(clk),
@@ -278,7 +280,9 @@ module PipelineCPU_Test (
         .branch_ctrl_to_ex(branch_ctrl_to_ex),
         .jump_ctrl_to_ex(jump_ctrl_to_ex),
         .isLoad_ctrl_to_ex(isLoad_ctrl_to_ex),
-        .isStore_ctrl_to_ex(isStore_ctrl_to_ex)
+        .isStore_ctrl_to_ex(isStore_ctrl_to_ex),
+        .funct3_w(funct3_from_id),
+        .funct7_w(funct7_from_id)
         // .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex),
         // .ecall_type_to_ex(ecall_type_to_ex)
 
@@ -288,7 +292,8 @@ module PipelineCPU_Test (
     wire idex_enable_write; //占位
     assign idex_enable_write = 1'b1; // 假设总是允许写入
 
-
+    wire [2:0] funct3_to_ex;
+    wire [6:0] funct7_to_ex;
 
     wire [31:0] rdata1_idex_to_ex;
     wire [31:0] rdata2_idex_to_ex;
@@ -342,6 +347,8 @@ module PipelineCPU_Test (
         .isLoad_ctrl_from_id(isLoad_ctrl_to_ex),
         .isStore_ctrl_from_id(isStore_ctrl_to_ex),
         .isEcall_ctrl_from_id(1'b0),
+        .funct3_from_id(funct3_from_id),
+        .funct7_from_id(funct7_from_id),
         // .forwardA_from_id(forwardA_from_idex),
         // .forwardB_from_id(forwardB_from_idex),
         //output
@@ -360,7 +367,9 @@ module PipelineCPU_Test (
         .jump_ctrl_to_ex(jump_ctrl_idex_to_ex),
         .isLoad_ctrl_to_ex(isLoad_ctrl_idex_to_ex),
         .isStore_ctrl_to_ex(isStore_ctrl_idex_to_ex),
-        .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex)
+        .isEcall_ctrl_to_ex(isEcall_ctrl_to_ex),
+        .funct3_to_ex(funct3_to_ex),
+        .funct7_to_ex(funct7_to_ex)
         // .forwardA_to_ex(forwardA_to_ex),
         // .forwardB_to_ex(forwardB_to_ex)
 
@@ -423,7 +432,8 @@ module PipelineCPU_Test (
     );
 
 
-
+    wire [2:0] funct3_to_mem;
+    wire [6:0] funct7_to_mem;
 
 
     EXMEM_PipelineRegister u_exmem_reg (
@@ -447,6 +457,8 @@ module PipelineCPU_Test (
         .IORead_ctrl_from_ex(IORead_to_exmem),
         .IOWrite_ctrl_from_ex(IOWrite_to_exmem),
         .MemToReg_ctrl_from_ex(MemToReg_to_exmem),
+        .funct3_from_ex(funct3_to_ex),
+        .funct7_from_ex(funct7_to_ex),
         //output
         .alu_result_to_mem(alu_result_to_mem),
         .branch_target_addr_to_mem(branch_target_addr_to_mem),
@@ -457,8 +469,8 @@ module PipelineCPU_Test (
 
 
         .final_RegWrite_ctrl_to_mem(final_RegWrite_ctrl),
-        
-        
+        .funct3_to_mem(funct3_to_mem),
+        .funct7_to_mem(funct7_to_mem),
         .MemRead_ctrl_to_mem(MemRead_ctrl_to_mem),
         .MemWrite_ctrl_to_mem(MemWrite_ctrl_to_mem),
         .IORead_ctrl_to_mem(IORead_ctrl_to_mem),
@@ -475,6 +487,8 @@ module PipelineCPU_Test (
     wire [31:0] data_to_write_to_dmem_io;
     wire led_write_enable_to_io;
     wire switch_read_enable_to_io;
+
+
 
     MemOrIO_Pipeline u_memorio (
         //input
@@ -496,12 +510,22 @@ module PipelineCPU_Test (
     );
 
 
-    DMem u_dmem (
+    // DMem u_dmem (
+    //     .clk(clk),
+    //     .MemRead(MemRead_ctrl_to_mem),
+    //     .MemWrite(MemWrite_ctrl_to_mem),
+    //     .addr(addr_to_dmem_io),
+    //     .din(data_to_write_to_dmem_io), 
+    //     .dout(data_read_from_dmem)
+    // );
+    DMem u_DMem (
         .clk(clk),
         .MemRead(MemRead_ctrl_to_mem),
         .MemWrite(MemWrite_ctrl_to_mem),
-        .addr(addr_to_dmem_io),
-        .din(data_to_write_to_dmem_io), 
+        .mem_width(funct3_to_mem[1:0]),
+        .sign_ext(~funct3_to_mem[2]),
+        .addr(addr_to_dmem_io),       
+        .din(data_to_write_to_dmem_io), // 使用MemOrIO处理后的写数据
         .dout(data_read_from_dmem)
     );
 
@@ -528,8 +552,7 @@ module PipelineCPU_Test (
         //output
         .io_readData_out(data_read_from_io),  // 从选定I/O设备读取的数据 (送回MemOrIO)
         .led_physical_out(led_out), // 输出到8位LED阵列的物理信号
-        .seg_physical_out(seg_physical_out), // 输出到七段数码管段码的物理信号 (a–g)
-        .an_physical_out(an_physical_out) // 输出到七段数码管位选的物理信号
+        .seg_data_out(seg_physical_out) // 输出到七段数码管段码的物理信号 (a–g)
     );
 
 

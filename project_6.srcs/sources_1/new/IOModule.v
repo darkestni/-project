@@ -6,8 +6,9 @@ module IOModule #(
     parameter LED_WIDTH = 16
 )
 (
+    //顶层模块的16位DIP输入，15:13 样例选择 12:4 数值 3:0 DebugMode
     input clk,                      // 系统时钟
-    // input reset,                 // 复位信号，根据需要添加
+    input reset,                 // 复位信号，根据需要添加
 
     // --- 输入信号 (通常来自MemOrIO或等效的MEM阶段I/O控制器) ---
     input [31:0] io_address,        // I/O设备地址 (由MemOrIO传递的原始ALU结果)
@@ -23,17 +24,19 @@ module IOModule #(
 
     output reg [31:0] io_readData_out,  // 从选定I/O设备读取的数据 (送回MemOrIO)
     output reg [LED_WIDTH-1:0]  led_physical_out, // 输出到8位LED阵列的物理信号
-    output reg [6:0]  seg_physical_out, // 输出到七段数码管段码的物理信号 (a–g)
-    output reg [3:0]  an_physical_out   // 输出到七段数码管位选的物理信号
+    output reg [31:0]  seg_data_out // 输出到数码管
+
 );
 
 
     // I/O设备绝对地址映射
     // 这些地址应与CPU设计中为I/O设备规划的地址完全一致
-    localparam DIP_ADDR    = 32'hFFFF0000;
+    localparam DIP_ADDR    = 32'hFFFF_F010;
+    localparam DIP_ADDR_NUMBER_CTRL = 32'hFFFF_F020; 
     localparam BUTTON_ADDR = 32'hFFFF0004;
-    localparam LED_ADDR    = 32'hFFFF0008;
+    localparam LED_ADDR    = 32'hFFFF_F000;
     localparam SEG_ADDR    = 32'hFFFF000C;
+    
 
     // 七段数码管编码 (0-9)
     reg [6:0] seg_codes [0:9];
@@ -56,43 +59,41 @@ module IOModule #(
     always @(*) begin
         io_readData_out = 32'd0; // 默认无读数据或无效读取
         if (io_access_read_enable) begin
-            if (io_address == DIP_ADDR) begin
-                io_readData_out = {{(32-DIP_WIDTH){1'b0}}, dipSwitch_physical_in};
-            end else if (io_address == BUTTON_ADDR && switch_read_enable) begin
-                io_readData_out ={{(32-BUTTON_WIDTH){1'b0}}, dipSwitch_physical_in};
+            if (io_address == DIP_ADDR && switch_read_enable) begin
+                io_readData_out = {24'b0, dipSwitch_physical_in[12:4]};
+            end 
+            // else if (io_address == BUTTON_ADDR && switch_read_enable) begin
+            //     io_readData_out ={{(32-BUTTON_WIDTH){1'b0}}, dipSwitch_physical_in};
+            // end
+            else if (io_address == DIP_ADDR_NUMBER_CTRL && switch_read_enable) begin
+                io_readData_out = {29'b0, dipSwitch_physical_in[3:1]};
+            end
+            else if (io_address == BUTTON_ADDR) begin
+                io_readData_out = {29'b0, button_physical_in};
+            end
+            else if (io_address == LED_ADDR) begin
+                io_readData_out = {{(32-LED_WIDTH){1'b0}}, led_physical_out};
+            end
+            else if (io_address == SEG_ADDR) begin
+                io_readData_out = seg_data_out;
             end
         end
     end
 
     // I/O写操作 (同步逻辑)
     // 当 io_access_write_enable 有效时，根据 io_address 决定向哪个设备写入数据
-    always @(posedge clk) begin
+    always @(posedge clk or posedge reset) begin
         // 如果需要复位LED和数码管的状态，可以在这里添加reset逻辑
-        // if (reset) begin
-        //    led_physical_out <= 8'd0;
-        //    seg_physical_out <= 7'b1111111; // 例如：共阳极全灭
-        //    an_physical_out  <= 4'b1111;    // 例如：全不选通
-        // end else
+        if (reset) begin
+           led_physical_out <= {LED_WIDTH{1'b0}}; // 例如：全灭
+           seg_data_out <= 32'b0; // 例如：共阳极全灭
+        end else
+        led_physical_out <= led_physical_out; // 保持LED状态
         if (io_access_write_enable) begin
             case (io_address)
                 LED_ADDR:  if (led_write_enable) led_physical_out <= io_writeData[LED_WIDTH-1:0];
                 SEG_ADDR: begin
-                    // 假设 io_writeData[3:0] 是要显示的数字 (0-9)
-                    // 假设 io_writeData[7:4] 控制位选 an (如果需要更复杂的控制)
-                    // 这里简化为只显示一位，并固定位选
-                    if (io_writeData[3:0] < 10) begin // 检查输入是否在0-9范围内
-                        seg_physical_out <= seg_codes[io_writeData[3:0]];
-                    end else begin
-                        // 对于无效数字，可以显示空白、错误指示，或保持上一个有效状态
-                        seg_physical_out <= 7'b1111111; // 例如：显示空白 (共阳极)
-                    end
-                    // 数码管位选逻辑
-                    // 如果是单个数码管，可以固定一个位选，例如选中第一个：
-                    an_physical_out  <= 4'b1110; // 假设使能第一个数码管 (AN0低电平有效)
-                    // 如果需要根据 io_writeData 的某几位来选择哪个数码管，可以在这里添加逻辑
-                    // 例如: an_physical_out <= ~io_writeData[7:4]; (假设writeData的高位控制位选)
-                    // 如果是动态扫描，此处的 an_physical_out 和 seg_physical_out 的更新会更复杂，
-                    // 通常需要一个独立的扫描控制器或在更高频率的时钟下更新。
+                    seg_data_out <= io_writeData[31:0]; // 直接写入数码管数据
                 end
                 // default: no operation for other addresses within I/O space
             endcase

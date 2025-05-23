@@ -9,6 +9,7 @@ module Execute_Stage_Wrapper (
     input [31:0] imm32_from_idex,
     input [31:0] pc_from_idex,
     input [4:0]  rd_addr_from_idex,
+    input [2:0] funct3_from_idex,
 
     // 控制信号
     input        regWrite_ctrl_from_idex,   // 是否写寄存器 (来自Controller_ID)
@@ -51,12 +52,12 @@ module Execute_Stage_Wrapper (
     output reg        branch_or_jump_to_if,
     output reg [31:0] target_pc_ex
 );
-
+    localparam BRANCH_BLT = 3'b100; 
     // 内部信号线
     // reg  [31:0] alu_operand_a;
     // reg  [31:0] alu_operand_b;
     wire [31:0] alu_arith_logic_result_internal; // ALU自身的算术逻辑运算结果
-    wire        alu_zero_flag;
+    wire        alu_branch_flag;
     wire [31:0] rs2_value; //从rdata2_from_idex和forwardB给回的数据中选择
 
     assign rs2_value = forwardB_from_idex == 2'b10 ? exmem_alu_result :
@@ -87,7 +88,7 @@ module Execute_Stage_Wrapper (
         .operand_b_from_ex(alu_operand_b),
         .alu_op_from_ex(ALUOp_ctrl_from_idex),
         .alu_result_to_exmem(alu_arith_logic_result_internal), // ALU的直接算术/逻辑结果
-        .zero_flag_to_ex(alu_zero_flag)
+        .zero_flag_to_ex(alu_branch_flag)
     );
 
     // 3. 计算 JAL/JALR 指令的返回地址 (Link Address = PC + 4)
@@ -119,7 +120,7 @@ module Execute_Stage_Wrapper (
     //发生BEQ,JAL,JALR时 branch_or_jump_to_if = 1
     always @(*) begin
         if (branch_ctrl_from_idex 
-        && alu_zero_flag
+        && alu_branch_flag
         // && condition_met_for_branch
         ) begin
             branch_or_jump_to_if = 1'b1;
@@ -133,6 +134,15 @@ module Execute_Stage_Wrapper (
             branch_or_jump_to_if = 1'b1;
             target_pc_ex            = pc_from_idex + imm32_from_idex;
         end 
+        else if (branch_ctrl_from_idex && funct3_from_idex == BRANCH_BLT && alu_arith_logic_result_internal[31] == 1'b1) begin
+            //BLT
+            branch_or_jump_to_if = 1'b1;
+            target_pc_ex            = pc_from_idex + imm32_from_idex;
+        end 
+
+
+
+
         else begin
             branch_or_jump_to_if = 1'b0;
             target_pc_ex            = pc_from_idex + 32'd4;

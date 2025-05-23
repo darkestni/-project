@@ -4,7 +4,7 @@ module Execute_ALU_Logic (
     input  [31:0] operand_b_from_ex,    // 第二个操作数 (例如来自 rs2 或立即数，已由ALUSrc选择)
     input  [3:0]  alu_op_from_ex,       // 来自Controller的4位ALU操作码 (经ID/EX寄存器传递)
     output reg [31:0] alu_result_to_exmem, // ALU计算结果
-    output reg        zero_flag_to_ex      // 零标志位 (当结果为0时为1，用于分支判断)
+    output reg        zero_flag_to_ex      // 零标志位 (用于分支判断)
 );
 
     // 来自 Controller_ID 的 ALUOp 定义 (与你提供的匹配)
@@ -18,7 +18,7 @@ module Execute_ALU_Logic (
     localparam ALUOP_SRA        = 4'b0111; // 算术右移
     localparam ALUOP_OR         = 4'b1000; // 或
     localparam ALUOP_AND        = 4'b1001; // 与
-    // localparam ALUOP_LUI_PASS_B = 4'b1010; // 你已注释掉
+    localparam ALUOP_LUI = 4'b1010; 
     localparam ALUOP_BRANCH_CMP = 4'b1011; // 分支比较 (见下方说明)
     localparam ALUOP_NOP        = 4'b1111; // 无操作
 
@@ -41,6 +41,7 @@ module Execute_ALU_Logic (
             ALUOP_SRA:  alu_result_to_exmem = $signed(operand_a_from_ex) >>> shift_amount;
             ALUOP_OR:   alu_result_to_exmem = operand_a_from_ex | operand_b_from_ex;
             ALUOP_AND:  alu_result_to_exmem = operand_a_from_ex & operand_b_from_ex;
+            ALUOP_LUI:  alu_result_to_exmem = operand_b_from_ex << 12; // LUI 指令直接将立即数传递给结果
 
             ALUOP_BRANCH_CMP: begin
                 // 假设如果 Controller_ID 发出了 ALUOP_BRANCH_CMP，它意味着执行减法。

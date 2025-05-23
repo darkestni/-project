@@ -27,9 +27,9 @@ module MemOrIO_Pipeline (
     output switch_read_enable_to_io        // 开关读使能信号
 );
 
-    localparam IO_LED_ADDR          = 32'hFFFFFC60; // LED地址
-    localparam IO_SWITCH_ADDR_LOW   = 32'hFFFFFC70; // 开关地址 (16位)
-
+    localparam IO_LED_ADDR          = 32'hFFFF_F000; // LED地址
+    localparam IO_SWITCH_ADDR_LOW   = 32'hFFFF_F010; // 开关地址 (16位)
+    localparam IO_SWITCH_NUMBER_CTRL = 32'hFFFF_F020;
     assign addr_to_dmem_io = alu_result_addr_from_exmem;
 
 
@@ -57,6 +57,6 @@ module MemOrIO_Pipeline (
     end
 
     assign led_write_enable_to_io = (IOWrite_ctrl_from_exmem && (alu_result_addr_from_exmem == IO_LED_ADDR));
-    assign switch_read_enable_to_io = (IORead_ctrl_from_exmem && (alu_result_addr_from_exmem == IO_SWITCH_ADDR_LOW));
+    assign switch_read_enable_to_io = (IORead_ctrl_from_exmem && (alu_result_addr_from_exmem == IO_SWITCH_ADDR_LOW || alu_result_addr_from_exmem == IO_SWITCH_NUMBER_CTRL));
 
 endmodule

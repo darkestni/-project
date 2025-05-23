@@ -31,6 +31,9 @@ module InstructionDecode_ID_Stage (
     output [31:0] x4,
     output [31:0] x5,
 
+    output wire [2:0] funct3_w, // funct3可能被Controller_ID使用
+    output wire [6:0] funct7_w, // funct7可能被Controller_ID使用
+
     // --- 输出到 ID/EX 流水线寄存器 (来自Controller_ID的控制信号) ---
     output regWrite_ctrl_to_ex,
     output ALUSrc_ctrl_to_ex,
@@ -57,8 +60,8 @@ module InstructionDecode_ID_Stage (
     wire [4:0] rs1_w;
     wire [4:0] rs2_w;
     wire [4:0] rd_w;
-    wire [2:0] funct3_w; // funct3可能被Controller_ID使用
-    wire [6:0] funct7_w; // funct7可能被Controller_ID使用
+    // wire [2:0] funct3_w; // funct3可能被Controller_ID使用
+    // wire [6:0] funct7_w; // funct7可能被Controller_ID使用
     wire [1:0] ecall_type_w;
 
     // --- 1. 指令字段提取 ---
