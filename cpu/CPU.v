@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`timescale 1ns / 1ps
+
 
 module CPU(
 input  clk,
@@ -52,7 +52,8 @@ wire        zero;          // ALU零标志
 wire        MemRead;       // 内存读
 wire        MemWrite;      // 内存写
 wire        ioRead;        // IO读
-wire        ioWrite;       // IO写
+wire       IOWrite_led;
+wire        IOWrite_seg;
 wire        MemorIO_to_Reg;  // 写回数据选择
 wire [31:0] ALU_result;    // ALU计算结果
 wire [31:0] read_data1;    // 寄存器读数据1
@@ -61,8 +62,8 @@ wire [31:0] mem_io_data;   // 内存或IO读取数据
 wire [31:0] mem_out;       // 内存读取数据
 
 
-wire [31:0] write_data;
-wire led_ctrl,sw_ctrl,number_crtl;
+wire [31:0] m_wdata;
+wire led_ctrl,sw_ctrl,number_ctrl;
 reg [31:0] registers[0:31];  
 
 IFetch u_IF (
@@ -86,8 +87,8 @@ Decoder u_Decoder (
 
 Controller u_Controller (
     .opcode(opcode),
-    .ecall(2'b00),
-    .ALU_result_high(ALU_result[31:10]),
+   // .ecall(2'b00),
+    .ALU_result(ALU_result[31:10]),
     .RegWrite(RegWrite),
     .ALUSrc(ALUSrc),
     .ALUOp(ALUOp),
@@ -97,7 +98,8 @@ Controller u_Controller (
     .MemRead(MemRead),
     .MemWrite(MemWrite),
     .IORead(ioRead),
-    .IOWrite(ioWrite)
+  .IOWrite_led(IOWrite_led),
+    .IOWrite_seg(IOWrite_seg)
 );
 
 //寄存器文件读写逻辑 
@@ -118,6 +120,7 @@ end
 assign read_data1 = (rs1 != 0) ? registers[rs1] : 32'b0;  
 assign read_data2 = (rs2 != 0) ? registers[rs2] : 32'b0;
 
+
 ALU u_ALU (
     .read_data1(read_data1),
     .read_data2(read_data2),
@@ -137,7 +140,7 @@ DMem u_DMem (
     .mem_width(funct3[1:0]),
     .sign_ext(~funct3[2]),
     .addr(ALU_result),       
-    .din(write_data), // 使用MemOrIO处理后的写数据
+    .din(m_wdata), // 使用MemOrIO处理后的写数据
     .dout(mem_out)
 );
 
@@ -145,28 +148,28 @@ MemOrIO u_MemOrIO (
     .mRead(MemRead),
     .mWrite(MemWrite),
     .ioRead(ioRead),
-    .ioWrite(ioWrite),
-    .addr_in(alu_result),
+    .ioWrite(1'b0),
+    .addr_in(ALU_result),
     .m_rdata(mem_out),
-    .io_rdata(switch_in[15:5]),
+    .io_rdata(switch_in[11:0]),
     .r_wdata(mem_io_data),
     .r_rdata(read_data2),
-    .write_data(write_data),
+    .m_wdata(m_wdata),
     .LEDCtrl(led_ctrl),
     .SwitchCtrl(sw_ctrl),
     .NumberCtrl(number_ctrl)
 );
 
-assign led_out = ioWrite ? read_data2[15:0] : 16'b0;
+assign led_out = IOWrite_led ? read_data2[15:0] : 16'b0;
     
 show_number show_inst (
     .clk(clk),
     .rst(rst),
-    .data(number_ctrl ? write_data : 32'b0),
+    .data(IOWrite_seg ? m_wdata : 32'b0),
     .seg_data(seg_data),
     .seg_data2(seg_data2),
     .seg_cs(seg_cs)
             );
 
 
-endmodule  
+endmodule

@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -19,12 +19,12 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-`timescale 1ns / 1ps
+
 
 module Controller (
     input [6:0] opcode,
     input [1:0] ecall,
-    input [21:0] ALU_result_high, // ALU 结果的高 22 位
+    input [21:0] ALU_result, 
     output reg RegWrite,
     output reg ALUSrc,
     output reg [1:0] ALUOp,
@@ -34,7 +34,8 @@ module Controller (
     output reg MemRead,
     output reg MemWrite,
     output reg IORead,
-    output reg IOWrite
+    output reg IOWrite_led,
+    output reg IOWrite_seg
 );
 
     always @(*) begin
@@ -48,7 +49,8 @@ module Controller (
         MemRead = 0;
         MemWrite = 0;
         IORead = 0;
-        IOWrite = 0;
+        IOWrite_led = 0;
+        IOWrite_seg= 0;
 
         case (opcode)
             7'b0110011: begin // R 型 (add, sub, and, or)
@@ -61,25 +63,27 @@ module Controller (
                 ALUSrc = 1;
                 ALUOp = 2'b00;
             end
-            7'b0000011: begin // I 型 (lw)
+           7'b0000011: begin // lw
                 RegWrite = 1;
-                ALUSrc = 1;
-                ALUOp = 2'b00;
-                if (ALU_result_high == 22'h3FFFFF) begin
-                    IORead = 1; // 地址在 IO 范围内
-                end else begin
-                    MemRead = 1; // 地址在存储器范围内
-                end
+                ALUSrc   = 1;
+                ALUOp    = 2'b00;
+                case (ALU_result)
+                    32'hFFFFF010: IORead  = 1;  // SW 输入  拨码开关   从IO中读
+                    default:      MemRead = 1;
+                endcase
             end
-            7'b0100011: begin // S 型 (sw)
-                ALUSrc = 1;
-                ALUOp = 2'b00;
-                if (ALU_result_high == 22'h3FFFFF) begin
-                    IOWrite = 1; // 地址在 IO 范围内
-                end else begin
-                    MemWrite = 1; // 地址在存储器范围内
-                end
+            
+            7'b0100011: begin // sw
+                ALUSrc   = 1;
+                ALUOp    = 2'b00;
+                case (ALU_result)
+                    32'hFFFFF000: IOWrite_led = 1; // 写 LED   输出都存在IO中
+                    
+                    32'hFFFFF020: IOWrite_seg = 1; // 写数码管
+                    default:      MemWrite = 1;   // 输入存在内存中
+                endcase
             end
+
             7'b1100011: begin // SB 型 (beq, bne, blt)
                 branch = 1;
                 ALUOp = 2'b01;
@@ -105,18 +109,18 @@ module Controller (
                 ALUSrc = 1;
                 ALUOp = 2'b00;
             end
-            7'b1110011: begin // ecall
-                if (ecall == 2'b01) begin
-                    RegWrite = 1;
-                    ALUOp = 2'b00;
-                end else if (ecall == 2'b10) begin
-                    IOWrite = 1; // ecall 功能 2，写 LED
-                end
-            end
+         //   7'b1110011: begin // ecall
+           //     if (ecall == 2'b01) begin
+            //        RegWrite = 1;
+            //        ALUOp = 2'b00;
+              //  end else if (ecall == 2'b10) begin
+              //      IOWrite = 1; // ecall 功能 2，写 LED
+               // end
+         //   end
         endcase
 
         // MemorIO_to_reg 逻辑
         MemorIO_to_Reg = IORead || MemRead;
-    end
+    end 
 
-endmodule
+endmodule 
