@@ -48,6 +48,7 @@ wire        ALUSrc;        // ALU源选择
 wire [1:0]  ALUOp;         // ALU操作码
 wire        branch;        // 分支信号
 wire        jump;
+wire        jalr;
 wire        zero;          // ALU零标志
 wire        MemRead;       // 内存读
 wire        MemWrite;      // 内存写
@@ -70,7 +71,10 @@ IFetch u_IF (
     .clk(clk),
     .branch(branch),
     .zero(zero),
+    .jump(jump),
+    .jalr(jalr),
     .imm32(imm32),
+    .reg_data(read_data1),
     .inst(inst)
 );
 
