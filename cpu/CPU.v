@@ -73,6 +73,7 @@ IFetch u_IF (
     .zero(zero),
     .jump(jump),
     .jalr(jalr),
+    .rst(rst),
     .imm32(imm32),
     .reg_data(read_data1),
     .inst(inst)
@@ -103,7 +104,8 @@ Controller u_Controller (
     .MemWrite(MemWrite),
     .IORead(ioRead),
   .IOWrite_led(IOWrite_led),
-    .IOWrite_seg(IOWrite_seg)
+    .IOWrite_seg(IOWrite_seg),
+    .jalr(jalr)
 );
 
 //¼Ä´æÆ÷ÎÄ¼þ¶ÁÐ´Âß¼­ 
