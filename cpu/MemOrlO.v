@@ -20,18 +20,27 @@ assign LEDCtrl    = (addr_in == 32'hFFFF_F000);
 
 // write back to reg
 //
-assign r_wdata = (mRead) ? m_rdata : 32'h00000000;
+assign r_wdata = (ioRead && SwitchCtrl) ? {20'h00000, io_rdata[11:0]} :
+                 (mRead) ? m_rdata : 32'h00000000;
 
 
 
+
+//always @(*) begin
+  //  if (mWrite) begin
+    //    if (SwitchCtrl) begin
+      //      m_wdata = {20'h00000, io_rdata[11:0]}; // 抽码读 IO，写入内存
+        //end else begin
+         //   m_wdata = r_rdata; // 从存器写 IO (LED/数码符)
+        //end
+    //end else begin
+      //  m_wdata = 32'b0;
+    //end
+//end
 
 always @(*) begin
     if (mWrite) begin
-        if (SwitchCtrl) begin
-            m_wdata = {20'h00000, io_rdata[11:0]}; // 抽码读 IO，写入内存
-        end else begin
-            m_wdata = r_rdata; // 从存器写 IO (LED/数码符)
-        end
+        m_wdata = r_rdata;  // 写内存或 IO，写入数据均来自 CPU 寄存器
     end else begin
         m_wdata = 32'b0;
     end

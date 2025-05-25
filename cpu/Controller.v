@@ -1,15 +1,19 @@
 module Controller (
     input [6:0] opcode,
     input [31:0] ALU_result,
+    input [31:0] read_data1,     // 新增：用于分支条件判断
+        input [31:0] read_data2,     // 新增：用于分支条件判断  
+        input [2:0] funct3,          // 新增：用于分支类型判断
     output reg RegWrite, ALUSrc, branch, jump,
     output reg [1:0] ALUOp,
     output reg MemorIO_to_Reg, MemRead, MemWrite,
     output reg IORead, IOWrite_led, IOWrite_seg,
-    output reg jalr
+    output reg jalr,
+    output reg branch_taken
 );
 
 always @(*) begin
-    // 默认值
+    // ??????
     RegWrite = 0;
     ALUSrc = 0;
     branch = 0;
@@ -38,6 +42,7 @@ always @(*) begin
             RegWrite = 1;
             ALUSrc = 1;
             ALUOp = 2'b00;
+            MemorIO_to_Reg = 1; 
             if (ALU_result == 32'hFFFF_F010)
                 IORead = 1;
             else
@@ -75,6 +80,22 @@ always @(*) begin
             ALUOp = 2'b11;
         end
     endcase
+end
+
+always @(*) begin
+    if (branch) begin
+        case (funct3)
+            3'b000: branch_taken = (read_data1 == read_data2);                    // beq
+            3'b001: branch_taken = (read_data1 != read_data2);                    // bne  
+            3'b100: branch_taken = ($signed(read_data1) < $signed(read_data2));   // blt
+            3'b101: branch_taken = ($signed(read_data1) >= $signed(read_data2));  // bge
+            3'b110: branch_taken = (read_data1 < read_data2);                     // bltu
+            3'b111: branch_taken = (read_data1 >= read_data2);                    // bgeu
+            default: branch_taken = 1'b0;
+        endcase
+    end else begin
+        branch_taken = 1'b0;
+    end
 end
 
 endmodule
