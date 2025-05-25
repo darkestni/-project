@@ -17,7 +17,7 @@ module IFID_PipelineRegister (
     output reg [31:0] pc_current_to_id,
     output reg [31:0] pc_plus_4_to_id
 );
-    parameter NOP_INSTRUCTION = 32'h00000013; // 定义一个NOP指令 (例如: addi x0, x0, 0)
+    parameter NOP_INSTRUCTION = 32'h00800013; // 定义一个NOP指令 (例如: addi x0, x0, 0)
     parameter RESET_PC_VAL  = 32'h00000000; // 复位时的PC值
 
     always @(posedge clk or posedge reset) begin
@@ -32,4 +32,6 @@ module IFID_PipelineRegister (
         end
         // 如果 enable_write 为0 (例如ID阶段暂停), 则寄存器保持原值
     end
+
+
 endmodule

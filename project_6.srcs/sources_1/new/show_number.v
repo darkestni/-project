@@ -39,6 +39,8 @@ module show_number(
        else
            begin
            if(clk_cnt>=100_000)
+            // if(clk_cnt>=20)
+
                begin
                clk_cnt<=0;
                clk_500hz<=~clk_500hz;

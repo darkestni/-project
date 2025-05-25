@@ -11,9 +11,15 @@ module clk_div_25mhz(
             count   <= 2'b00;
             clk_out <= 1'b0;
         end else begin
-            count <= count + 1;
-            if (count == 2'b01 || count == 2'b11)
+            if (count >= 2'b11) begin
+                count <= 2'b00;
                 clk_out <= ~clk_out;
+            end else begin
+                if (count == 2'b01) begin
+                    clk_out <= ~clk_out;
+                end
+                count <= count + 1;
+            end
         end
     end
 

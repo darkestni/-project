@@ -1,6 +1,12 @@
 # 时钟信号 (100 MHz 系统时钟)
 set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS33} [get_ports clk]
-create_clock -period 10.000 -name clk [get_ports clk]
+create_clock -period 10.000  [get_ports clk]
+# # Define the generated 25MHz clock
+# create_generated_clock -name clk_25mhz_derived \
+#                        -source [get_pins clk_div_25mhz/clk_in] \
+#                        -divide_by 4 \
+#                        [get_pins clk_div_25mhz/clk_out]
+
 
 # 复位信号 (CPU_RESET 按钮)
 set_property -dict {PACKAGE_PIN P15 IOSTANDARD LVCMOS33} [get_ports reset]
@@ -14,22 +20,23 @@ set_property IOSTANDARD LVCMOS33 [get_ports {button[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {button[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {button[0]}]
 # 拨码开关 (SW2-SW9)
-set_property -dict {PACKAGE_PIN P5  IOSTANDARD LVCMOS33} [get_ports {switch_in[15]}]
-set_property -dict {PACKAGE_PIN P4  IOSTANDARD LVCMOS33} [get_ports {switch_in[14]}]
-set_property -dict {PACKAGE_PIN P3  IOSTANDARD LVCMOS33} [get_ports {switch_in[13]}]
-set_property -dict {PACKAGE_PIN P2  IOSTANDARD LVCMOS33} [get_ports {switch_in[12]}]
-set_property -dict {PACKAGE_PIN R2  IOSTANDARD LVCMOS33} [get_ports {switch_in[11]}]
-set_property -dict {PACKAGE_PIN M4  IOSTANDARD LVCMOS33} [get_ports {switch_in[10]}]
-set_property -dict {PACKAGE_PIN N4  IOSTANDARD LVCMOS33} [get_ports {switch_in[9]}]
-set_property -dict {PACKAGE_PIN R1  IOSTANDARD LVCMOS33} [get_ports {switch_in[8]}]
-set_property -dict {PACKAGE_PIN U3  IOSTANDARD LVCMOS33} [get_ports {switch_in[7]}]
-set_property -dict {PACKAGE_PIN U2  IOSTANDARD LVCMOS33} [get_ports {switch_in[6]}]
-set_property -dict {PACKAGE_PIN V2  IOSTANDARD LVCMOS33} [get_ports {switch_in[5]}]
-set_property -dict {PACKAGE_PIN V5  IOSTANDARD LVCMOS33} [get_ports {switch_in[4]}]
-set_property -dict {PACKAGE_PIN V4  IOSTANDARD LVCMOS33} [get_ports {switch_in[3]}]
-set_property -dict {PACKAGE_PIN R3  IOSTANDARD LVCMOS33} [get_ports {switch_in[2]}]
-set_property -dict {PACKAGE_PIN T3  IOSTANDARD LVCMOS33} [get_ports {switch_in[1]}]
-set_property -dict {PACKAGE_PIN T5  IOSTANDARD LVCMOS33} [get_ports {switch_in[0]}]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {switch_in_IBUF[15]}]
+set_property -dict {PACKAGE_PIN P5 IOSTANDARD LVCMOS33} [get_ports {switch_in[15]}]
+set_property -dict {PACKAGE_PIN P4 IOSTANDARD LVCMOS33} [get_ports {switch_in[14]}]
+set_property -dict {PACKAGE_PIN P3 IOSTANDARD LVCMOS33} [get_ports {switch_in[13]}]
+set_property -dict {PACKAGE_PIN P2 IOSTANDARD LVCMOS33} [get_ports {switch_in[12]}]
+set_property -dict {PACKAGE_PIN R2 IOSTANDARD LVCMOS33} [get_ports {switch_in[11]}]
+set_property -dict {PACKAGE_PIN M4 IOSTANDARD LVCMOS33} [get_ports {switch_in[10]}]
+set_property -dict {PACKAGE_PIN N4 IOSTANDARD LVCMOS33} [get_ports {switch_in[9]}]
+set_property -dict {PACKAGE_PIN R1 IOSTANDARD LVCMOS33} [get_ports {switch_in[8]}]
+set_property -dict {PACKAGE_PIN U3 IOSTANDARD LVCMOS33} [get_ports {switch_in[7]}]
+set_property -dict {PACKAGE_PIN U2 IOSTANDARD LVCMOS33} [get_ports {switch_in[6]}]
+set_property -dict {PACKAGE_PIN V2 IOSTANDARD LVCMOS33} [get_ports {switch_in[5]}]
+set_property -dict {PACKAGE_PIN V5 IOSTANDARD LVCMOS33} [get_ports {switch_in[4]}]
+set_property -dict {PACKAGE_PIN V4 IOSTANDARD LVCMOS33} [get_ports {switch_in[3]}]
+set_property -dict {PACKAGE_PIN R3 IOSTANDARD LVCMOS33} [get_ports {switch_in[2]}]
+set_property -dict {PACKAGE_PIN T3 IOSTANDARD LVCMOS33} [get_ports {switch_in[1]}]
+set_property -dict {PACKAGE_PIN T5 IOSTANDARD LVCMOS33} [get_ports {switch_in[0]}]
 # 按钮 (BTN0)
 # set_property -dict {PACKAGE_PIN N17 IOSTANDARD LVCMOS33} [get_ports button]
 set_property PACKAGE_PIN U4 [get_ports {button[4]}]
@@ -139,3 +146,4 @@ set_property PACKAGE_PIN G6 [get_ports {tub_control[0]}]
 # 设置时序优化
 # set_property CFGBVS VCCO [current_design]
 # set_property CONFIG_VOLTAGE 3.3 [current_design]
+

@@ -44,7 +44,14 @@ module IFetch (
             if (branch) begin
                 pc <= target_pc_in_if;
             end else begin
+                if (pc >= 32'hFFFFFF00) begin
+                    pc <= pc;
+                end else begin
+                    // pc <= pc + 4; // 直接加4
+                    // pc <= pc + 4; // 直接加4
+                    // instruction_to_ifid <= bram_instruction_data;
                 pc <= pc + 4;
+                end
             end
 
             // instruction_to_ifid <= bram_instruction_data;

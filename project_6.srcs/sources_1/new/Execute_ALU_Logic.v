@@ -41,7 +41,7 @@ module Execute_ALU_Logic (
             ALUOP_SRA:  alu_result_to_exmem = $signed(operand_a_from_ex) >>> shift_amount;
             ALUOP_OR:   alu_result_to_exmem = operand_a_from_ex | operand_b_from_ex;
             ALUOP_AND:  alu_result_to_exmem = operand_a_from_ex & operand_b_from_ex;
-            ALUOP_LUI:  alu_result_to_exmem = operand_b_from_ex << 12; // LUI 指令直接将立即数传递给结果
+            ALUOP_LUI:  alu_result_to_exmem = operand_b_from_ex; // LUI 指令直接将立即数传递给结果
 
             ALUOP_BRANCH_CMP: begin
                 // 假设如果 Controller_ID 发出了 ALUOP_BRANCH_CMP，它意味着执行减法。

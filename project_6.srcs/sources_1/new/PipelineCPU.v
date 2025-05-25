@@ -230,6 +230,7 @@ module PipelineCPU (
     Execute_Stage_Wrapper u_exe (
         .clk(clk),
         .reset(reset),
+        .funct3_from_idex(funct3_to_ex),
         .rdata1_from_idex(rdata1_idex_to_ex),
         .rdata2_from_idex(rdata2_idex_to_ex),
         .imm32_from_idex(imm32_idex_to_ex),

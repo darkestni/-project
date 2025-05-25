@@ -28,7 +28,8 @@ output reg key_out  // Output key signal
 );
 reg key_reg1, key_reg2; 
 reg [20:0] delay_cnt;   
-parameter DELAY_TIME = 21'd1_000_000; 
+parameter DELAY_TIME = 21'd1_000_000; //ио╟Ф
+// parameter DELAY_TIME = 21'd5000; //simulate
 
 
 always @(posedge clk) begin

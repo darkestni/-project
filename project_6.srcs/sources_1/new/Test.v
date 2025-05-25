@@ -1,4 +1,8 @@
-module DebugMode(
+module Test(
+    // input debugMode,
+    // output wire [31:0]segOut, 
+    // input [2:0] segOutSel,
+    // input debug_clk,
     input clk, 
     input reset, // pass to cpu
     input  [15:0] switch_in, // pass to cpu
@@ -70,46 +74,17 @@ module DebugMode(
     assign clk_to_cpu = debugMode ? debug_clk : clkout;
     assign x1_2 = {x1[15:0], x2[15:0]};
     assign x3_4 = {x3[15:0], x4[15:0]};
+    
     assign control_signal = {dbg_datahazard_detect_stall_pc_ifid_idexnop[31:28],dbg_datahazard_detect_stall_pc_ifid_idexnop[27:24],
     dbg_datahazard_detect_stall_pc_ifid_idexnop[23:20],dbg_forward_a_b_ex[31:24],dbg_forward_a_b_ex[23:16],4'b0};
-    //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop 4-5是forwardA 6-7 forwardB 8whether jump
-    PipelineCPU cpu (
-        // .clk(clk_to_cpu),
-        .clk(clk),
-        .reset(reset),
-        //for test (existing)
-        .x1(x1),
-        .x2(x2),
-        .x3(x3),
-        .x4(x4),
-        .x5(x5),
-        .dbg_ifid_instruction(dbg_ifid_instruction),
-        .dbg_if_pc(dbg_if_pc),
-        .dbg_ex_operand_a(dbg_ex_operand_a),
-        .dbg_ex_operand_b(dbg_ex_operand_b),
-        .dbg_idex_rs1(dbg_idex_rs1),
-        .dbg_idex_rs2(dbg_idex_rs2),
-        .dbg_ex_whether_jump(dbg_ex_whether_jump),
-        .dbg_idex_jump_target(dbg_idex_jump_target),
-        .dbg_forward_a_b_ex(dbg_forward_a_b_ex), //左1是forwardA 左2是forwardB
-        .dbg_datahazard_detect_stall_pc_ifid_idexnop(dbg_datahazard_detect_stall_pc_ifid_idexnop), //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop
-        .dbg_clk_count(dbg_clk_count), //时钟计数器
-        // pass to cpu
-        .debugMode(1'b0),
-        .testScenario(32'b0),
-        .switch_in(switch_in), 
-        .led_out(led), 
-        .seg_physical_out(write_data_to_seg)
-    );
-
-    wire [31:0] test_clk;
+        wire [31:0] test_clk;
     ClockCount clk_count(
         .clk(clk_to_cpu),
         .reset(reset),
         .clk_count(test_clk)
     );
 
-    SegOutMUX segOutMUX(
+        SegOutMUX segOutMUX(
         .debugOn(debugMode),
         .write_data_to_seg(write_data_to_seg),
         .debugMode(segOutSel),
@@ -119,79 +94,25 @@ module DebugMode(
         .ifid_instruction(dbg_ifid_instruction),
         .datahazard_detect_stall_pc_ifid_idexnop(control_signal), 
         // .clk_count(dbg_clk_count), //时钟计数器
-        // .clk_count(test_clk), //时钟计数器
-        .clk_count(debug_clk), //时钟计数器
+        .clk_count(test_clk), //时钟计数器
         .segOut(segOut)
     );
-
-
-        wire [31:0] counter1;
-        Counter counter(
-            .clk(clkout),
-            .rst(reset),
-            .enable(1'b1),
-            .reverse(1'b0),
-            .start(32'b0),
-            .seconds(counter1[6:0]),
-            .minutes(counter1[14:8]),
-            .hours(counter1[20:16])
-        );
-        wire [31:0] counter2;
-        Counter counter2s(
-            .clk(clk),
-            .rst(reset),
-            .enable(1'b1),
-            .reverse(1'b0),
-            .start(32'b0),
-            .seconds(counter2[6:0]),
-            .minutes(counter2[14:8]),
-            .hours(counter2[20:16])
-        );
-    wire [31:0] test_show;
-    assign test_show = debugMode ? counter1 : counter2;
-
-
-    show_number show_number(
+    wire [31:0] segOut_test;
+    assign segOut_test = debug_clk ? 32'h1 : 32'h0;
+        show_number show_number(
         .clk(clk),
-        .rst(!reset),
-        // .data(segOut),
-        .data(test_show),
+        .rst(reset),
+        .data(segOut_test),
+        // .data(test_show),
         .seg_data(seg1),
         .seg_data2(seg2),
         .seg_cs(seg_cs)
     );
-
-    //button to switch state
-    wire button0;
-
-    // DebugClkGenerator debug_clk_gen(
-    //     .clk(clk),
-    //     .reset(reset),
-    //     .button(button[4]),
-    //     .dbg_clk(debug_clk)
-    // );
-    assign debug_clk = switch_in[15];
-
-
-    clk_div_25mhz clk_div_25mhz(
-        .clk_in(clk),
-        .rst(reset),
-        .clk_out(clkout)
+        DebugClkGenerator debug_clk_gen(
+        .clk(clk),
+        .reset(reset),
+        .button(button[4]),
+        .dbg_clk(debug_clk)
     );
-//     module Counter(
-// input clk,
-// input rst,
-// input enable,
-// input reverse,//
-// input [31:0] start,
-// output reg [6:0]seconds,
-// output reg [6:0]minutes,
-// output reg [5:0]hours
-//     );
-//      integer timer_cnt;
-
-
-
-        
 
 endmodule

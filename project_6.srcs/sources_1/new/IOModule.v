@@ -32,27 +32,27 @@ module IOModule #(
     // I/O设备绝对地址映射
     // 这些地址应与CPU设计中为I/O设备规划的地址完全一致
     localparam DIP_ADDR    = 32'hFFFF_F010;
-    localparam DIP_ADDR_NUMBER_CTRL = 32'hFFFF_F020; 
+    // localparam DIP_ADDR_NUMBER_CTRL = 32'hFFFF_F020; 
     localparam BUTTON_ADDR = 32'hFFFF0004;
     localparam LED_ADDR    = 32'hFFFF_F000;
-    localparam SEG_ADDR    = 32'hFFFF000C;
+    localparam SEG_ADDR    = 32'hFFFF_F020;
     
 
-    // 七段数码管编码 (0-9)
-    reg [6:0] seg_codes [0:9];
-    initial begin
-        // 共阳极数码管编码示例 (低电平有效)
-        seg_codes[0] = 7'b1000000; // 0
-        seg_codes[1] = 7'b1111001; // 1
-        seg_codes[2] = 7'b0100100; // 2
-        seg_codes[3] = 7'b0110000; // 3
-        seg_codes[4] = 7'b0011001; // 4
-        seg_codes[5] = 7'b0010010; // 5
-        seg_codes[6] = 7'b0000010; // 6
-        seg_codes[7] = 7'b1111000; // 7
-        seg_codes[8] = 7'b0000000; // 8
-        seg_codes[9] = 7'b0010000; // 9
-    end
+    // // 七段数码管编码 (0-9)
+    // reg [6:0] seg_codes [0:9];
+    // initial begin
+    //     // 共阳极数码管编码示例 (低电平有效)
+    //     seg_codes[0] = 7'b1000000; // 0
+    //     seg_codes[1] = 7'b1111001; // 1
+    //     seg_codes[2] = 7'b0100100; // 2
+    //     seg_codes[3] = 7'b0110000; // 3
+    //     seg_codes[4] = 7'b0011001; // 4
+    //     seg_codes[5] = 7'b0010010; // 5
+    //     seg_codes[6] = 7'b0000010; // 6
+    //     seg_codes[7] = 7'b1111000; // 7
+    //     seg_codes[8] = 7'b0000000; // 8
+    //     seg_codes[9] = 7'b0010000; // 9
+    // end
 
     // I/O读操作 (组合逻辑)
     // 当 io_access_read_enable 有效时，根据 io_address 决定从哪个设备读取数据
@@ -60,14 +60,14 @@ module IOModule #(
         io_readData_out = 32'd0; // 默认无读数据或无效读取
         if (io_access_read_enable) begin
             if (io_address == DIP_ADDR && switch_read_enable) begin
-                io_readData_out = {24'b0, dipSwitch_physical_in[12:4]};
+                io_readData_out = {{(32-DIP_WIDTH){1'b0}}, dipSwitch_physical_in};
             end 
             // else if (io_address == BUTTON_ADDR && switch_read_enable) begin
             //     io_readData_out ={{(32-BUTTON_WIDTH){1'b0}}, dipSwitch_physical_in};
             // end
-            else if (io_address == DIP_ADDR_NUMBER_CTRL && switch_read_enable) begin
-                io_readData_out = {29'b0, dipSwitch_physical_in[3:1]};
-            end
+            // else if (io_address == DIP_ADDR_NUMBER_CTRL && switch_read_enable) begin
+            //     io_readData_out = {29'b0, dipSwitch_physical_in[3:1]};
+            // end
             else if (io_address == BUTTON_ADDR) begin
                 io_readData_out = {29'b0, button_physical_in};
             end
