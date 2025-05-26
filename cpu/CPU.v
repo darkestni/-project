@@ -1,81 +1,186 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/04/21 15:15:03
+// Design Name: 
+// Module Name: CPU
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
-// Simplified Testbench: Unit-level testing of MemOrIO module (lw, IO read)
-module tb_lw_complete;
-    // Inputs to MemOrIO
-    reg         mRead;
-    reg         mWrite;
-    reg         ioRead;
-    reg         ioWrite;
-    reg  [31:0] addr_in;
-    reg  [31:0] m_rdata;
-    reg  [11:0] io_rdata;
-    reg  [31:0] r_rdata;
 
-    // Outputs from MemOrIO
-    wire [31:0] r_wdata;
-    wire [31:0] m_wdata;
-    wire        LEDCtrl;
-    wire        SwitchCtrl;
-    wire        NumberCtrl;
+module CPU(
+input  clk,
+input  rst,
+input  [15:0] switch_in,    // �������루IO��
+output [15:0] led_out,       // LED �����IO��
+output [7:0] seg_data,      // ����ܶ���
+output [7:0] seg_data2,
+output [7:0] seg_cs
 
-    // Instantiate only MemOrIO for unit testing
-    MemOrIO dut (
-        .mRead      (mRead),
-        .mWrite     (mWrite),
-        .ioRead     (ioRead),
-        .ioWrite    (ioWrite),
-        .addr_in    (addr_in),
-        .m_rdata    (m_rdata),
-        .io_rdata   (io_rdata),
-        .r_rdata    (r_rdata),
-        .r_wdata    (r_wdata),
-        .m_wdata    (m_wdata),
-        .LEDCtrl    (LEDCtrl),
-        .SwitchCtrl (SwitchCtrl),
-        .NumberCtrl (NumberCtrl)
-    );
+);
+//    wire \[2:0]  caseId;      // ������ţ���3λ��
+//    wire \[7:0]  dataIn;      // �������ݣ���8λ��
 
-    initial begin
-        // Initialize inputs
-        mRead     = 0;
-        mWrite    = 0;
-        ioRead    = 0;
-        ioWrite   = 0;
-        addr_in   = 0;
-        m_rdata   = 0;
-        io_rdata  = 0;
-        r_rdata   = 0;
-        #10;
+//    assign caseId = switchIn\[10:8];
+//    assign dataIn = switchIn\[7:0];
+wire [31:0] inst;
+wire [31:0] imm32;
+wire [4:0]  rs1;
+wire [4:0]  rs2;
+wire [4:0]  rd;
+wire [6:0]  opcode;
+wire [2:0]  funct3;
+wire [6:0]  funct7;
+wire        RegWrite;      // �Ĵ���дʹ��
+wire        ALUSrc;        // ALUԴѡ��
+wire [1:0]  ALUOp;         // ALU������
+wire        branch;        // ��֧�ź�
+wire        jump;
+wire        jalr;
+wire        zero;          // ALU���־
+wire        MemRead;       // �ڴ��
+wire        MemWrite;      // �ڴ�д
+wire        ioRead;        // IO��
+wire       IOWrite_led;
+wire        IOWrite_seg;
+wire        MemorIO_to_Reg;  // д������ѡ��
+wire [31:0] ALU_result;    // ALU������
+wire [31:0] read_data1;    // �Ĵ���������1
+wire [31:0] read_data2;    // �Ĵ���������2
+wire [31:0] mem_io_data;   // �ڴ��IO��ȡ����
+wire [31:0] mem_out;       // �ڴ��ȡ����
+wire branch_taken;
 
-        // Test 1: lw from memory
-        $display("-- Test 1: lw (memory) --");
-        mRead     = 1;
-        addr_in   = 32'h0000_0010;
-        m_rdata   = 32'hDEADBEEF;
-        #10;
-        if (r_wdata === m_rdata)
-            $display("[PASS] lw read data = 0x%08h", r_wdata);
-        else
-            $display("[FAIL] lw expected 0xDEADBEEF, got 0x%08h", r_wdata);
-        mRead     = 0;
-        #10;
+wire [31:0] m_wdata;
+wire led_ctrl,sw_ctrl,number_ctrl;
+reg [31:0] registers[0:31];  
 
-        // Test 2: IO read from SwitchCtrl
-        $display("-- Test 2: IO Read (Switch) --");
-        ioRead    = 1;
-        addr_in   = 32'hFFFFF010;
-        io_rdata  = 12'hABC;
-        #10;
-        if (r_wdata === {20'd0, io_rdata})
-            $display("[PASS] ioRead zero-extend = 0x%08h", r_wdata);
-        else
-            $display("[FAIL] ioRead expected 0x00000ABC, got 0x%08h", r_wdata);
-        ioRead    = 0;
-        #10;
+IFetch u_IF (
+    .clk(clk),
+    .branch(branch),
+    .zero(branch_taken),
+    .jump(jump),
+    .jalr(jalr),
+    .rst(rst),
+    .imm32(imm32),
+    .reg_data(read_data1),
+    .inst(inst)
+);
 
-        // Finish simulation
-        $display("-- MemOrIO unit tests complete --");
-        $finish;
+Decoder u_Decoder (
+    .instruction(inst),
+    .imm32(imm32),
+    .rs1(rs1),
+    .rs2(rs2),
+    .rd(rd),
+    .opcode(opcode),
+    .funct3(funct3),
+    .funct7(funct7)
+);
+
+Controller u_Controller (
+    .opcode(opcode),
+   // .ecall(2'b00),
+   .read_data1(read_data1),
+           .read_data2(read_data2),
+           .funct3(funct3),
+    .ALU_result(ALU_result),
+    .RegWrite(RegWrite),
+    .ALUSrc(ALUSrc),
+    .ALUOp(ALUOp),
+    .branch(branch),
+    .jump(jump),
+    .MemorIO_to_Reg(MemorIO_to_Reg),
+    .MemRead(MemRead),
+    .MemWrite(MemWrite),
+    .IORead(ioRead),
+  .IOWrite_led(IOWrite_led),
+    .IOWrite_seg(IOWrite_seg),
+    .jalr(jalr),
+     .branch_taken(branch_taken)
+    
+);
+
+//�Ĵ����ļ���д�߼� 
+
+integer i;
+always @(posedge clk) begin
+    if (rst) begin
+        // ��λʱ��ʼ�����мĴ���Ϊ0������x0��
+        for ( i = 0; i < 32; i = i + 1) begin
+            registers[i] <= 32'b0;
+        end
+    end else if (RegWrite && (rd != 0)) begin
+        // ��x0�Ĵ���д�룺ѡ��ALU������ڴ�/IO����
+        registers[rd] <= (MemorIO_to_Reg) ? mem_io_data : ALU_result;
     end
+end
+
+assign read_data1 = (rs1 != 0) ? registers[rs1] : 32'b0;  
+assign read_data2 = (rs2 != 0) ? registers[rs2] : 32'b0;
+
+
+ALU u_ALU (
+    .read_data1(read_data1),
+    .read_data2(read_data2),
+    .imm32(imm32),
+    .ALUOp(ALUOp),
+    .funct3(funct3),
+    .funct7(funct7),
+    .ALUSrc(ALUSrc),
+    .ALU_result(ALU_result),
+    .zero(zero)
+);
+
+DMem u_DMem (
+    .clk(clk),
+    .MemRead(MemRead),
+    .MemWrite(MemWrite),
+    .mem_width(funct3[1:0]),
+    .sign_ext(~funct3[2]),
+    .addr(ALU_result),       
+    .din(m_wdata), // ʹ��MemOrIO�������д����
+    .dout(mem_out)
+);
+
+MemOrIO u_MemOrIO (
+    .mRead(MemRead),
+    .mWrite(MemWrite),
+    .ioRead(ioRead),
+    .ioWrite(1'b0),
+    .addr_in(ALU_result),
+    .m_rdata(mem_out),
+    .io_rdata(switch_in[11:0]),
+    .r_wdata(mem_io_data),
+    .r_rdata(read_data2),
+    .m_wdata(m_wdata),
+    .LEDCtrl(led_ctrl),
+    .SwitchCtrl(sw_ctrl),
+    .NumberCtrl(number_ctrl)
+);
+
+assign led_out = IOWrite_led ? read_data2[15:0] : 16'b0;
+    
+show_number show_inst (
+    .clk(clk),
+    .rst(rst),
+    .data(IOWrite_seg ? m_wdata : 32'b0),
+    .seg_data(seg_data),
+    .seg_data2(seg_data2),
+    .seg_cs(seg_cs)
+            );
+
+
 endmodule
