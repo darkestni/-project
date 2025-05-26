@@ -1,13 +1,13 @@
 module Controller (
     input [6:0] opcode,
     input [31:0] ALU_result,
-    input [31:0] read_data1,     // ĞÂÔö£ºÓÃÓÚ·ÖÖ§Ìõ¼şÅĞ¶Ï
-        input [31:0] read_data2,     // ĞÂÔö£ºÓÃÓÚ·ÖÖ§Ìõ¼şÅĞ¶Ï  
-        input [2:0] funct3,          // ĞÂÔö£ºÓÃÓÚ·ÖÖ§ÀàĞÍÅĞ¶Ï
+    input [31:0] read_data1,     // æ–°å¢ï¼šç”¨äºåˆ†æ”¯æ¡ä»¶åˆ¤æ–­
+        input [31:0] read_data2,     // æ–°å¢ï¼šç”¨äºåˆ†æ”¯æ¡ä»¶åˆ¤æ–­  
+        input [2:0] funct3,          // æ–°å¢ï¼šç”¨äºåˆ†æ”¯ç±»å‹åˆ¤æ–­
     output reg RegWrite, ALUSrc, branch, jump,
     output reg [1:0] ALUOp,
     output reg MemorIO_to_Reg, MemRead, MemWrite,
-    output reg IORead, IOWrite_led, IOWrite_seg,
+    output reg  IORead, IOWrite_led, IOWrite_seg,
     output reg jalr,
     output reg branch_taken
 );
@@ -38,16 +38,19 @@ always @(*) begin
             ALUSrc = 1;
             ALUOp = 2'b00;
         end
-        7'b0000011: begin // Load (e.g., lb, lbu)
+        7'b0000011: begin // Load (e.g., lb, lbu, lw)
             RegWrite = 1;
             ALUSrc = 1;
             ALUOp = 2'b00;
-            MemorIO_to_Reg = 1; 
-            if (ALU_result == 32'hFFFF_F010)
+            if (ALU_result == 32'hFFFF_F010) begin
                 IORead = 1;
-            else
+                MemorIO_to_Reg = 1;
+            end else begin
                 MemRead = 1;
+                MemorIO_to_Reg = 0;
+            end
         end
+
         7'b0100011: begin // Store (e.g., sb)
             ALUSrc = 1;
             ALUOp = 2'b00;
