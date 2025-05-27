@@ -1,9 +1,9 @@
 module Controller (
     input [6:0] opcode,
     input [31:0] ALU_result,
-    input [31:0] read_data1,     // æ–°å¢ï¼šç”¨äºåˆ†æ”¯æ¡ä»¶åˆ¤æ–­
-        input [31:0] read_data2,     // æ–°å¢ï¼šç”¨äºåˆ†æ”¯æ¡ä»¶åˆ¤æ–­  
-        input [2:0] funct3,          // æ–°å¢ï¼šç”¨äºåˆ†æ”¯ç±»å‹åˆ¤æ–­
+    input [31:0] read_data1,     // ĞÂÔö£ºÓÃÓÚ·ÖÖ§Ìõ¼şÅĞ¶Ï
+        input [31:0] read_data2,     // ĞÂÔö£ºÓÃÓÚ·ÖÖ§Ìõ¼şÅĞ¶Ï  
+        input [2:0] funct3,          // ĞÂÔö£ºÓÃÓÚ·ÖÖ§ÀàĞÍÅĞ¶Ï
     output reg RegWrite, ALUSrc, branch, jump,
     output reg [1:0] ALUOp,
     output reg MemorIO_to_Reg, MemRead, MemWrite,

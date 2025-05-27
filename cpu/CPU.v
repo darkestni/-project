@@ -23,15 +23,15 @@
 module CPU(
 input  clk,
 input  rst,
-input  [15:0] switch_in,    // �������루IO��
-output [15:0] led_out,       // LED �����IO��
-output [7:0] seg_data,      // ����ܶ���
+input  [15:0] switch_in,    // ????????IO??
+output [15:0] led_out,       // LED ?????IO??
+output [7:0] seg_data,      // ????????
 output [7:0] seg_data2,
 output [7:0] seg_cs
 
 );
-//    wire \[2:0]  caseId;      // ������ţ���3λ��
-//    wire \[7:0]  dataIn;      // �������ݣ���8λ��
+//    wire \[2:0]  caseId;      // ??????????3��??
+//    wire \[7:0]  dataIn;      // ???????????8��??
 
 //    assign caseId = switchIn\[10:8];
 //    assign dataIn = switchIn\[7:0];
@@ -43,24 +43,24 @@ wire [4:0]  rd;
 wire [6:0]  opcode;
 wire [2:0]  funct3;
 wire [6:0]  funct7;
-wire        RegWrite;      // �Ĵ���дʹ��
-wire        ALUSrc;        // ALUԴѡ��
-wire [1:0]  ALUOp;         // ALU������
-wire        branch;        // ��֧�ź�
+wire        RegWrite;      // ?????��???
+wire        ALUSrc;        // ALU????
+wire [1:0]  ALUOp;         // ALU??????
+wire        branch;        // ??????
 wire        jump;
 wire        jalr;
-wire        zero;          // ALU���־
-wire        MemRead;       // �ڴ��
-wire        MemWrite;      // �ڴ�д
-wire        ioRead;        // IO��
+wire        zero;          // ALU????
+wire        MemRead;       // ????
+wire        MemWrite;      // ???��
+wire        ioRead;        // IO??
 wire       IOWrite_led;
 wire        IOWrite_seg;
-wire        MemorIO_to_Reg;  // д������ѡ��
-wire [31:0] ALU_result;    // ALU������
-wire [31:0] read_data1;    // �Ĵ���������1
-wire [31:0] read_data2;    // �Ĵ���������2
-wire [31:0] mem_io_data;   // �ڴ��IO��ȡ����
-wire [31:0] mem_out;       // �ڴ��ȡ����
+wire        MemorIO_to_Reg;  // ��?????????
+wire [31:0] ALU_result;    // ALU??????
+wire [31:0] read_data1;    // ???????????1
+wire [31:0] read_data2;    // ???????????2
+wire [31:0] mem_io_data;   // ????IO???????
+wire [31:0] mem_out;       // ?????????
 wire branch_taken;
 
 wire [31:0] m_wdata;
@@ -113,17 +113,17 @@ Controller u_Controller (
     
 );
 
-//�Ĵ����ļ���д�߼� 
+//??????????��??? 
 
 integer i;
 always @(posedge clk) begin
     if (rst) begin
-        // ��λʱ��ʼ�����мĴ���Ϊ0������x0��
+        // ??��?????????��?????0??????x0??
         for ( i = 0; i < 32; i = i + 1) begin
             registers[i] <= 32'b0;
         end
     end else if (RegWrite && (rd != 0)) begin
-        // ��x0�Ĵ���д�룺ѡ��ALU������ڴ�/IO����
+        // ??x0?????��?????ALU????????/IO????
         registers[rd] <= (MemorIO_to_Reg) ? mem_io_data : ALU_result;
     end
 end
@@ -151,7 +151,7 @@ DMem u_DMem (
     .mem_width(funct3[1:0]),
     .sign_ext(~funct3[2]),
     .addr(ALU_result),       
-    .din(m_wdata), // ʹ��MemOrIO�������д����
+    .din(m_wdata), // ???MemOrIO???????��????
     .dout(mem_out)
 );
 

@@ -21,11 +21,10 @@ always @* begin
         2'b00: begin // I-type: addi, andi, ori, xori, slti, sltiu, slli, srli, srai
             case (funct3)
                 3'b000: ALUControl = 4'b0010; // addi
+                3'b010: ALUControl = 4'b0010; // lw: 强制使用加法
                 3'b111: ALUControl = 4'b0000; // andi
                 3'b110: ALUControl = 4'b0001; // ori
                 3'b100: ALUControl = 4'b0011; // xori
-                3'b010: ALUControl = 4'b0100; // slti
-                3'b011: ALUControl = 4'b0101; // sltiu
                 3'b001: ALUControl = 4'b1000; // slli
                 3'b101: begin
                     if (funct7 == 7'b0000000) ALUControl = 4'b1001; // srli

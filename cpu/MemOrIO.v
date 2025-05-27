@@ -20,7 +20,7 @@ assign LEDCtrl    = (addr_in == 32'hFFFF_F000);
 
 // write back to reg
 //
-assign r_wdata = (mRead) ? m_rdata : 32'h00000000;
+assign r_wdata = (ioRead) ? io_rdata : m_rdata;
 
 
 
