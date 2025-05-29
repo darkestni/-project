@@ -62,7 +62,8 @@ wire [31:0] read_data2;    // ???????????2
 wire [31:0] mem_io_data;   // ????IO???????
 wire [31:0] mem_out;       // ?????????
 wire branch_taken;
-
+wire [31:0] next_pc;
+wire is_jal_jalr;     // 标识jal/jalr指令
 wire [31:0] m_wdata;
 wire led_ctrl,sw_ctrl,number_ctrl;
 reg [31:0] registers[0:31];  
@@ -76,7 +77,8 @@ IFetch u_IF (
     .rst(rst),
     .imm32(imm32),
     .reg_data(read_data1),
-    .inst(inst)
+    .inst(inst),
+    .next_pc(next_pc)
 );
 
 Decoder u_Decoder (
@@ -109,12 +111,14 @@ Controller u_Controller (
   .IOWrite_led(IOWrite_led),
     .IOWrite_seg(IOWrite_seg),
     .jalr(jalr),
-     .branch_taken(branch_taken)
-    
+     .branch_taken(branch_taken),
+    .is_jal_jalr(is_jal_jalr)
 );
 
 //??????????д??? 
-
+wire [31:0] reg_write_data = 
+    is_jal_jalr ? next_pc :  // 优先返回地址
+    (MemorIO_to_Reg ? mem_io_data : ALU_result);
 integer i;
 always @(posedge clk) begin
     if (rst) begin
@@ -123,8 +127,7 @@ always @(posedge clk) begin
             registers[i] <= 32'b0;
         end
     end else if (RegWrite && (rd != 0)) begin
-        // ??x0?????д?????ALU????????/IO????
-        registers[rd] <= (MemorIO_to_Reg) ? mem_io_data : ALU_result;
+        registers[rd] <= reg_write_data;
     end
 end
 

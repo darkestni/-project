@@ -9,7 +9,8 @@ module Controller (
     output reg MemorIO_to_Reg, MemRead, MemWrite,
     output reg  IORead, IOWrite_led, IOWrite_seg,
     output reg jalr,
-    output reg branch_taken
+    output reg branch_taken,
+    output reg is_jal_jalr
 );
 
 always @(*) begin
@@ -26,7 +27,7 @@ always @(*) begin
     IOWrite_led = 0;
     IOWrite_seg = 0;
     jalr = 0;
-
+    is_jal_jalr = 0;
     case (opcode)
         7'b0110011: begin // R-type: add, sub, slt, sltu, and, or, xor, sll, srl, sra
             RegWrite = 1;
@@ -42,12 +43,13 @@ always @(*) begin
             RegWrite = 1;
             ALUSrc = 1;
             ALUOp = 2'b00;
+            MemorIO_to_Reg = 1;
             if (ALU_result == 32'hFFFF_F010) begin
                 IORead = 1;
-                MemorIO_to_Reg = 1;
+                
             end else begin
                 MemRead = 1;
-                MemorIO_to_Reg = 0;
+
             end
         end
 
@@ -69,6 +71,7 @@ always @(*) begin
             RegWrite = 1;
             jump = 1;
             ALUOp = 2'b00;
+            is_jal_jalr = 1'b1;
         end
         7'b1100111: begin // jalr
             RegWrite = 1;
@@ -76,6 +79,7 @@ always @(*) begin
             ALUSrc = 1;
             ALUOp = 2'b00;
             jalr = 1;
+            is_jal_jalr = 1'b1;
         end
         7'b0110111, 7'b0010111: begin // lui, auipc
             RegWrite = 1;
