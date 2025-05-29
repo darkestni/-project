@@ -22,7 +22,7 @@ module IFetch (
 
     // Ö¸ÁîROMÊµÀý»¯
     prgrom urom(
-        .clka(clk),
+        .clka(!clk),
         .addra(pc[15:2]),    
         .douta(bram_instruction_data)
     );
@@ -34,7 +34,7 @@ module IFetch (
     // end
 
 
-    always @(negedge clk or posedge reset) begin
+    always @(posedge clk or posedge reset) begin
         if (reset) begin
             pc <= 32'h00000000;
             // instruction_to_ifid <= 32'h00000013;  // NOP = ADDI x0, x0, 0

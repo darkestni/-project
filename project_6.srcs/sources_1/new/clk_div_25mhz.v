@@ -4,21 +4,18 @@ module clk_div_25mhz(
     output reg clk_out        // 25 MHz Ê±ÖÓÊä³ö
 );
 
-    reg [1:0] count;
+    reg [4:0] count;
 
     always @(posedge clk_in or posedge rst) begin
         if (rst) begin
-            count   <= 2'b00;
+            count   <= 4'b0000;
             clk_out <= 1'b0;
         end else begin
-            if (count >= 2'b11) begin
-                count <= 2'b00;
+            if (count >= 4'b0101) begin
+                count <= 4'b0000;
                 clk_out <= ~clk_out;
             end else begin
-                if (count == 2'b01) begin
-                    clk_out <= ~clk_out;
-                end
-                count <= count + 1;
+                count <= count + 1'b1;
             end
         end
     end

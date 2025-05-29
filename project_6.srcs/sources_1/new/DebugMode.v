@@ -73,9 +73,9 @@ module DebugMode(
     assign control_signal = {dbg_datahazard_detect_stall_pc_ifid_idexnop[31:28],dbg_datahazard_detect_stall_pc_ifid_idexnop[27:24],
     dbg_datahazard_detect_stall_pc_ifid_idexnop[23:20],dbg_forward_a_b_ex[31:24],dbg_forward_a_b_ex[23:16],4'b0};
     //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop 4-5是forwardA 6-7 forwardB 8whether jump
-    PipelineCPU cpu (
+    PipelineCPU u_cpu (
         // .clk(clk_to_cpu),
-        .clk(clk),
+        .clk(clkout),
         .reset(reset),
         //for test (existing)
         .x1(x1),
@@ -104,6 +104,7 @@ module DebugMode(
 
     wire [31:0] test_clk;
     ClockCount clk_count(
+        .count_on(led[0]),
         .clk(clk_to_cpu),
         .reset(reset),
         .clk_count(test_clk)
@@ -153,7 +154,7 @@ module DebugMode(
 
     show_number show_number(
         .clk(clk),
-        .rst(!reset),
+        .rst(reset),
         // .data(segOut),
         .data(test_show),
         .seg_data(seg1),
@@ -190,7 +191,14 @@ module DebugMode(
 //     );
 //      integer timer_cnt;
 
-
+//   clk_wiz_0 instance_name
+//    (
+//     // Clock out ports
+//     .clk_out1(clkout),     // output clk_out1
+//     // Status and control signals
+//     .reset(reset), // input reset
+//    // Clock in ports
+//     .clk_in1(clk));   
 
         
 

@@ -1,11 +1,8 @@
 # 时钟信号 (100 MHz 系统时钟)
 set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS33} [get_ports clk]
-create_clock -period 10.000  [get_ports clk]
+create_clock -period 14.000 -waveform {0.000 7.000} [get_ports clk]
 # # Define the generated 25MHz clock
-# create_generated_clock -name clk_25mhz_derived \
-#                        -source [get_pins clk_div_25mhz/clk_in] \
-#                        -divide_by 4 \
-#                        [get_pins clk_div_25mhz/clk_out]
+# create_generated_clock -name clk_25mhz_derived #                        -source [get_pins clk_div_25mhz/clk_in] #                        -divide_by 4 #                        [get_pins clk_div_25mhz/clk_out]
 
 
 # 复位信号 (CPU_RESET 按钮)
@@ -146,4 +143,5 @@ set_property PACKAGE_PIN G6 [get_ports {tub_control[0]}]
 # 设置时序优化
 # set_property CFGBVS VCCO [current_design]
 # set_property CONFIG_VOLTAGE 3.3 [current_design]
+
 
