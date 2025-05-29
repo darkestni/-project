@@ -162,7 +162,7 @@ MemOrIO u_MemOrIO (
     .ioWrite(1'b0),
     .addr_in(ALU_result),
     .m_rdata(mem_out),
-    .io_rdata(switch_in[11:0]),
+    .io_rdata(switch_in[12:0]),
     .r_wdata(mem_io_data),
     .r_rdata(read_data2),
     .m_wdata(m_wdata),
