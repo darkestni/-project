@@ -38,61 +38,35 @@ module tb_CPU();
     #18;
     rst = 0;
 
-    // 用例 0：输入 a=2，caseId = 000
-    switch_in[10:8] = 3'b000;
-    switch_in[7:0]  = 8'd2;
-    #10;
-    switch_in[11]=1'b1;
-    #100;
-    switch_in[11]=1'b0;
-    // 用例 1：输入 a=5，写入寄存器
-    switch_in[10:8] = 3'b001;
-    switch_in[7:0]  = 8'd5;
-    #10;
-        switch_in[11]=1'b1;
-        #100;
-        switch_in[11]=1'b0;
-
-    // 用例 2：输入 b=3，写入寄存器
-    switch_in[10:8] = 3'b010;
-    switch_in[7:0]  = 8'd3;
-    #10;
-        switch_in[11]=1'b1;
-        #100;
-        switch_in[11]=1'b0;
-
-    // 用例 3：beq 比较 (5 == 3) -> false
-    switch_in[10:8] = 3'b011;
-   
-        #200;
-
-
-    // 用例 4：blt 比较 (5 < 3) -> false
+    #200;
     switch_in[10:8] = 3'b100;
-
-        #200;
-
-
-    // 用例 5：bltu 比较 (5 < 3) -> false
-    switch_in[10:8] = 3'b101;
-    #10;
+        switch_in[7:0]  = 8'b00001000;
+        #10;
         switch_in[11]=1'b1;
-        #100;
-        switch_in[11]=1'b0;
-
-    // 用例 6：slt 比较 (5 < 3) -> false
-    switch_in[10:8] = 3'b110;
-    #10;
-        switch_in[11]=1'b1;
-        #100;
-        switch_in[11]=1'b0;
-
-    // 用例 7：sltu 比较 (5 < 3) -> false
-    switch_in[10:8] = 3'b111;
-    #10;
-        switch_in[11]=1'b1;
-        #100;
-        switch_in[11]=1'b0;
+        #700;
+    // case2
+//    switch_in[12]=1'b0;
+//    switch_in[10:8] = 3'b010;
+//    switch_in[7:0]  = 8'b01010000;
+//    #10;
+//    switch_in[11]=1'b1;
+//    #400;
+    
+//    switch_in[11]=1'b0;
+//    switch_in[12]=1'b1;
+//    switch_in[10:8] = 3'b010;
+//    switch_in[7:0]  = 8'b01001000;
+//    #20;
+//    switch_in[11]=1'b1;
+//    #400;
+    
+//    switch_in[11]=1'b0;
+//    switch_in[12]=1'b0;
+//    switch_in[10:8] = 3'b011;
+//    switch_in[7:0]  = 8'b00000000;
+//    #20;
+//    switch_in[11]=1'b1;
+//    #800;
 
     $display("Test completed.");
     $stop;
