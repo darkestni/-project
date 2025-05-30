@@ -11,7 +11,7 @@ module clk_div_25mhz(
             count   <= 4'b0000;
             clk_out <= 1'b0;
         end else begin
-            if (count >= 4'b0101) begin
+            if (count >= 4'b0011) begin
                 count <= 4'b0000;
                 clk_out <= ~clk_out;
             end else begin

@@ -105,7 +105,7 @@ module DebugMode(
     wire [31:0] test_clk;
     ClockCount clk_count(
         .count_on(led[0]),
-        .clk(clk_to_cpu),
+        .clk(clkout),
         .reset(reset),
         .clk_count(test_clk)
     );
