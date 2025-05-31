@@ -4,7 +4,7 @@ module show_number_clk_count_MUX(
     input reset,
     input [15:0] led_data,
     input [31:0] data1,
-    output wire [31:0] to_show_number,
+    output wire [31:0] to_show_number
 );
     reg [31:0] clk_count;
     always @(posedge clk or posedge reset) begin

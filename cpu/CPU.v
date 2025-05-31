@@ -24,7 +24,7 @@ module CPU(
 input  clk,
 input  rst,
 input  [15:0] switch_in,    // ????????IO??
-output [15:0] led_out,       // LED ?????IO??
+output reg [15:0] led_out,       // LED ?????IO??
 output [7:0] seg_data,      // ????????
 output [7:0] seg_data2,
 output [7:0] seg_cs
@@ -36,6 +36,7 @@ output [7:0] seg_cs
 //    assign caseId = switchIn\[10:8];
 //    assign dataIn = switchIn\[7:0];
 wire [31:0] inst;
+wire clkout;
 wire [31:0] imm32;
 wire [4:0]  rs1;
 wire [4:0]  rs2;
@@ -69,7 +70,7 @@ wire led_ctrl,sw_ctrl,number_ctrl;
 reg [31:0] registers[0:31];  
 
 IFetch u_IF (
-    .clk(clk),
+    .clk(clkout),
     .branch(branch),
     .zero(branch_taken),
     .jump(jump),
@@ -120,7 +121,7 @@ wire [31:0] reg_write_data =
     is_jal_jalr ? next_pc :  // 优先返回地址
     (MemorIO_to_Reg ? mem_io_data : ALU_result);
 integer i;
-always @(posedge clk) begin
+always @(posedge clkout) begin
     if (rst) begin
         // ??λ?????????м?????0??????x0??
         for ( i = 0; i < 32; i = i + 1) begin
@@ -148,7 +149,7 @@ ALU u_ALU (
 );
 
 DMem u_DMem (
-    .clk(clk),
+    .clk(clkout),
     .MemRead(MemRead),
     .MemWrite(MemWrite),
     .mem_width(funct3[1:0]),
@@ -174,8 +175,23 @@ MemOrIO u_MemOrIO (
     .NumberCtrl(number_ctrl)
 );
 
-assign led_out = IOWrite_led ? read_data2[15:0] : 16'b0;
-    
+// assign led_out = IOWrite_led ? read_data2[15:0] : 16'b0;
+always @(*) begin
+    // led_out = 16'b0; 
+    if (IOWrite_led 
+    && read_data2[15:0] != 16'b0
+    ) begin
+        led_out = read_data2[15:0]; 
+    end
+    // else if (rst) begin
+    //     led_out = 16'b0; // rst时清零
+    // end
+    else begin
+        led_out = led_out; // 保持原值
+    end 
+
+end
+
 show_number show_inst (
     .clk(clk),
     .rst(rst),
@@ -184,6 +200,14 @@ show_number show_inst (
     .seg_data2(seg_data2),
     .seg_cs(seg_cs)
             );
+clk_wiz_0 instance_name
+   (
+    // Clock out ports
+    .clk_out1(clkout),     // output clk_out1
+   // Clock in ports
+    .clk_in1(clk));      // input clk_in1
+// INST_TAG_END ------ End INSTANTIATION Template ---------
+
 
 
 endmodule

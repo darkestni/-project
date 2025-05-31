@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_CPU();
+module tb_DebugMode();
 
   // 输入信号
   reg clk;
@@ -14,15 +14,27 @@ module tb_CPU();
   wire [7:0] seg_cs;
 
   // 实例化 CPU
-  CPU uut (
+  DebugMode uut (
     .clk(clk),
-    .rst(rst),
+    .reset(rst),
     .switch_in(switch_in),
-    .led_out(led_out),
-    .seg_data(seg_data),
-    .seg_data2(seg_data2),
-    .seg_cs(seg_cs)
+    .led(led_out),
+    .seg1(seg_data),
+    .seg2(seg_data2),
+    .button(5'b0),
+    .tub_control(seg_cs)
   );
+
+//   module DebugMode(
+//     input clk, 
+//     input reset, // pass to cpu
+//     input  [15:0] switch_in, // pass to cpu
+//     output [15:0] led, // pass to cpu
+//     input [4:0] button, //4 up 3 down 2 left 1 right 0 center
+//     output wire[7:0]seg1,
+//     output wire[7:0]seg2,
+//     output wire[7:0]tub_control
+// );
 
   // 时钟生成（100MHz）
   initial begin
@@ -36,11 +48,32 @@ module tb_CPU();
     rst = 1;
     switch_in = 16'b0;
     #18;
+    switch_in[0] = 1'b1;
+    switch_in[3:1] = 3'b011;
     rst = 0;
 
-    #2000;
-    switch_in[10:8] = 3'b000;
-        switch_in[7:0]  = 8'b10001000;
+    #8000;
+    switch_in[15] = 1'b1;
+    #200;
+    switch_in[15] = 1'b0;
+    #200;
+    switch_in[15] = 1'b1;
+    #200;
+    switch_in[15] = 1'b0;
+    #200;
+    switch_in[15] = 1'b1;
+    #200;
+    switch_in[15] = 1'b0;
+    #200;
+    switch_in[15] = 1'b1;
+        #200;
+    switch_in[15] = 1'b0;
+    #200;
+    switch_in[15] = 1'b1;
+        #200;
+    switch_in[15] = 1'b0;
+    #200;
+    switch_in[15] = 1'b1;    
         #1000;
         switch_in[11]=1'b1;
         #700;

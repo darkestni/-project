@@ -1,6 +1,5 @@
 # 时钟信号 (100 MHz 系统时钟)
 set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS33} [get_ports clk]
-create_clock -period 14.000 -waveform {0.000 7.000} [get_ports clk]
 # # Define the generated 25MHz clock
 # create_generated_clock -name clk_25mhz_derived #                        -source [get_pins clk_div_25mhz/clk_in] #                        -divide_by 4 #                        [get_pins clk_div_25mhz/clk_out]
 
@@ -17,7 +16,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports {button[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {button[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {button[0]}]
 # 拨码开关 (SW2-SW9)
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {switch_in_IBUF[15]}]
 set_property -dict {PACKAGE_PIN P5 IOSTANDARD LVCMOS33} [get_ports {switch_in[15]}]
 set_property -dict {PACKAGE_PIN P4 IOSTANDARD LVCMOS33} [get_ports {switch_in[14]}]
 set_property -dict {PACKAGE_PIN P3 IOSTANDARD LVCMOS33} [get_ports {switch_in[13]}]

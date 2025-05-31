@@ -75,7 +75,7 @@ module DebugMode(
     //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop 4-5是forwardA 6-7 forwardB 8whether jump
     PipelineCPU u_cpu (
         // .clk(clk_to_cpu),
-        .clk(clkout),
+        .clk(clk_to_cpu),
         .reset(reset),
         //for test (existing)
         .x1(x1),
@@ -88,7 +88,7 @@ module DebugMode(
         .dbg_ex_operand_a(dbg_ex_operand_a),
         .dbg_ex_operand_b(dbg_ex_operand_b),
         .dbg_idex_rs1(dbg_idex_rs1),
-        .dbg_idex_rs2(dbg_idex_rs2),
+        .dbg_idex_rs2(dbg_idex_rs2),10
         .dbg_ex_whether_jump(dbg_ex_whether_jump),
         .dbg_idex_jump_target(dbg_idex_jump_target),
         .dbg_forward_a_b_ex(dbg_forward_a_b_ex), //左1是forwardA 左2是forwardB
@@ -102,13 +102,7 @@ module DebugMode(
         .seg_physical_out(write_data_to_seg)
     );
 
-    wire [31:0] test_clk;
-    ClockCount clk_count(
-        .count_on(led[0]),
-        .clk(clkout),
-        .reset(reset),
-        .clk_count(test_clk)
-    );
+
 
     SegOutMUX segOutMUX(
         .debugOn(debugMode),
@@ -119,44 +113,18 @@ module DebugMode(
         .x5(x5),
         .ifid_instruction(dbg_ifid_instruction),
         .datahazard_detect_stall_pc_ifid_idexnop(control_signal), 
-        // .clk_count(dbg_clk_count), //时钟计数器
-        // .clk_count(test_clk), //时钟计数器
-        .clk_count(debug_clk), //时钟计数器
+
+        .clk_count(dbg_clk_count), //时钟计数器
         .segOut(segOut)
     );
 
-
-        wire [31:0] counter1;
-        Counter counter(
-            .clk(clkout),
-            .rst(reset),
-            .enable(1'b1),
-            .reverse(1'b0),
-            .start(32'b0),
-            .seconds(counter1[6:0]),
-            .minutes(counter1[14:8]),
-            .hours(counter1[20:16])
-        );
-        wire [31:0] counter2;
-        Counter counter2s(
-            .clk(clk),
-            .rst(reset),
-            .enable(1'b1),
-            .reverse(1'b0),
-            .start(32'b0),
-            .seconds(counter2[6:0]),
-            .minutes(counter2[14:8]),
-            .hours(counter2[20:16])
-        );
-    wire [31:0] test_show;
-    assign test_show = debugMode ? counter1 : counter2;
 
 
     show_number show_number(
         .clk(clk),
         .rst(reset),
-        // .data(segOut),
-        .data(test_show),
+        .data(segOut),
+        // .data(test_show),
         .seg_data(seg1),
         .seg_data2(seg2),
         .seg_cs(seg_cs)
@@ -174,11 +142,13 @@ module DebugMode(
     assign debug_clk = switch_in[15];
 
 
-    clk_div_25mhz clk_div_25mhz(
-        .clk_in(clk),
-        .rst(reset),
-        .clk_out(clkout)
-    );
+  clk_wiz_0 instance_name
+   (
+    // Clock out ports
+    .clk_out1(clkout),     // output clk_out1
+   // Clock in ports
+    .clk_in1(clk));      // input clk_in1
+
 //     module Counter(
 // input clk,
 // input rst,
