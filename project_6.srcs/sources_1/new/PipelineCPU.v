@@ -416,6 +416,7 @@ module PipelineCPU (
     ClockCount u_clk_count (
         .clk(clk),
         .reset(reset),
+        .count_on(led_out[0]),
         .clk_count(clk_count)
     );
 

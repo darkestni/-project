@@ -45,38 +45,37 @@ module tb_DebugMode();
   // Ö÷²âÊÔÂß¼­
   initial begin
     // ³õÊ¼×´Ì¬
-    rst = 1;
-    switch_in = 16'b0;
-    #18;
-    switch_in[0] = 1'b1;
-    switch_in[3:1] = 3'b011;
     rst = 0;
+    switch_in = 16'b0;
+    #800;
+    rst = 1;
+    #800;
+    // rst = 1;
+    switch_in[3:1] = 3'b101;
+    // #300000;
+    // switch_in[0] = 1'b1;
+    // switch_in[15] = ~switch_in[15];
+    //     #300;
+    // switch_in[15] = ~switch_in[15];
 
-    #8000;
-    switch_in[15] = 1'b1;
-    #200;
-    switch_in[15] = 1'b0;
-    #200;
-    switch_in[15] = 1'b1;
-    #200;
-    switch_in[15] = 1'b0;
-    #200;
-    switch_in[15] = 1'b1;
-    #200;
-    switch_in[15] = 1'b0;
-    #200;
-    switch_in[15] = 1'b1;
-        #200;
-    switch_in[15] = 1'b0;
-    #200;
-    switch_in[15] = 1'b1;
-        #200;
-    switch_in[15] = 1'b0;
-    #200;
-    switch_in[15] = 1'b1;    
-        #1000;
-        switch_in[11]=1'b1;
-        #700;
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+    // #300;
+    // switch_in[15] = ~switch_in[15];
+
+
+
+        
     // case2
 //    switch_in[12]=1'b0;
 //    switch_in[10:8] = 3'b010;

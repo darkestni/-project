@@ -39,10 +39,7 @@ module tb_CPU();
     rst = 0;
 
     #2000;
-    switch_in[10:8] = 3'b000;
-        switch_in[7:0]  = 8'b10001000;
-        #1000;
-        switch_in[11]=1'b1;
+    switch_in = 16'h0c18;
         #700;
     // case2
 //    switch_in[12]=1'b0;

@@ -2,12 +2,14 @@ module DebugMode(
     input clk, 
     input reset, // pass to cpu
     input  [15:0] switch_in, // pass to cpu
-    output [15:0] led, // pass to cpu
+    output wire [15:0] led, // pass to cpu
     input [4:0] button, //4 up 3 down 2 left 1 right 0 center
     output wire[7:0]seg1,
     output wire[7:0]seg2,
     output wire[7:0]tub_control
 );
+    wire rst;
+    assign rst = !reset;
     wire [31:0] segOut;
     wire [7:0] seg_cs;
     wire clkin;
@@ -73,10 +75,12 @@ module DebugMode(
     assign control_signal = {dbg_datahazard_detect_stall_pc_ifid_idexnop[31:28],dbg_datahazard_detect_stall_pc_ifid_idexnop[27:24],
     dbg_datahazard_detect_stall_pc_ifid_idexnop[23:20],dbg_forward_a_b_ex[31:24],dbg_forward_a_b_ex[23:16],4'b0};
     //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop 4-5是forwardA 6-7 forwardB 8whether jump
+
+    wire [15:0] led_test;
     PipelineCPU u_cpu (
         // .clk(clk_to_cpu),
         .clk(clk_to_cpu),
-        .reset(reset),
+        .reset(rst),
         //for test (existing)
         .x1(x1),
         .x2(x2),
@@ -88,7 +92,7 @@ module DebugMode(
         .dbg_ex_operand_a(dbg_ex_operand_a),
         .dbg_ex_operand_b(dbg_ex_operand_b),
         .dbg_idex_rs1(dbg_idex_rs1),
-        .dbg_idex_rs2(dbg_idex_rs2),10
+        .dbg_idex_rs2(dbg_idex_rs2),
         .dbg_ex_whether_jump(dbg_ex_whether_jump),
         .dbg_idex_jump_target(dbg_idex_jump_target),
         .dbg_forward_a_b_ex(dbg_forward_a_b_ex), //左1是forwardA 左2是forwardB
@@ -98,9 +102,12 @@ module DebugMode(
         .debugMode(1'b0),
         .testScenario(32'b0),
         .switch_in(switch_in), 
-        .led_out(led), 
+        .led_out(led_test), 
         .seg_physical_out(write_data_to_seg)
     );
+
+    assign led[7:0] = led_test[15:8];
+    assign led[15:8] = led_test[7:0]; 
 
 
 
