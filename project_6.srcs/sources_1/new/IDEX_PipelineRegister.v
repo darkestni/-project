@@ -62,7 +62,9 @@ module IDEX_PipelineRegister (
 
 
     always @(posedge clk or posedge reset) begin
-        if (reset || flush_idex) begin // 复位或冲刷时，载入NOP的默认值
+        if (reset 
+        // || flush_idex
+        ) begin // 复位或冲刷时，载入NOP的默认值
             // 数据通路值清零或设为安全值
             rdata1_to_ex         <= 32'd0;
             rdata2_to_ex         <= 32'd0;
@@ -85,7 +87,33 @@ module IDEX_PipelineRegister (
             funct3_to_ex        <= 3'b0;
             funct7_to_ex        <= 7'b0;
 
-        end else if (enable_write) begin // 如果允许写入（EX阶段没有暂停）
+
+        end 
+            else    if (flush_idex) begin // 复位或冲刷时，载入NOP的默认值
+            // 数据通路值清零或设为安全值
+            rdata1_to_ex         <= 32'd0;
+            rdata2_to_ex         <= 32'd0;
+            imm32_to_ex          <= 32'd0;
+            rd_addr_to_ex        <= 5'd0;
+            rs1_addr_to_ex       <= 5'd0;
+            rs2_addr_to_ex       <= 5'd0;
+            pc_to_ex             <= 32'd0; // 或者一个特定的“无效PC”标记
+            ecall_type_to_ex     <= CTL_NOP_ECALLTYPE;
+
+            // 控制信号设为NOP状态
+            regWrite_ctrl_to_ex  <= CTL_NOP_REGWRITE;
+            ALUSrc_ctrl_to_ex    <= CTL_NOP_ALUSRC;
+            ALUOp_ctrl_to_ex     <= CTL_NOP_ALUOP;
+            branch_ctrl_to_ex    <= CTL_NOP_BRANCH;
+            jump_ctrl_to_ex      <= CTL_NOP_JUMP;
+            isLoad_ctrl_to_ex    <= CTL_NOP_ISLOAD;
+            isStore_ctrl_to_ex   <= CTL_NOP_ISSTORE;
+            isEcall_ctrl_to_ex   <= CTL_NOP_ISECALL;
+            funct3_to_ex        <= 3'b0;
+            funct7_to_ex        <= 7'b0;
+        end
+        
+        else if (enable_write) begin // 如果允许写入（EX阶段没有暂停）
             // 锁存从ID阶段传来的数据和控制信号
             rdata1_to_ex         <= rdata1_from_id;
             rdata2_to_ex         <= rdata2_from_id;

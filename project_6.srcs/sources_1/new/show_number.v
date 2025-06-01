@@ -93,7 +93,7 @@ module show_number(
        04'hc: seg_data = 8'h39;
        04'hd: seg_data = 8'h5E;
        04'he: seg_data = 8'h79;
-       04'hf: seg_data = 8'h40;    //71 ?40 - ?
+       04'hf: seg_data = 8'h71;    //71 ?40 - ?
        default: seg_data = 8'h40;
        endcase
        case(dis_data )
@@ -112,7 +112,7 @@ module show_number(
        04'hc: seg_data2 = 8'h39;
        04'hd: seg_data2 = 8'h5E;
        04'he: seg_data2 = 8'h79;
-       04'hf: seg_data2 = 8'h40;   //71 ?40- ?
+       04'hf: seg_data2 = 8'h71;   //71 ?40- ?
        default: seg_data2 = 8'h40;
        endcase
        end

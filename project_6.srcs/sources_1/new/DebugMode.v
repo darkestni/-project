@@ -12,8 +12,8 @@ module DebugMode(
     assign rst = !reset;
     wire [31:0] segOut;
     wire [7:0] seg_cs;
-    wire clkin;
-    assign clkin = clk;
+    // wire clkin;
+    // assign clkin = clk;
     wire clkout;
     assign tub_control = seg_cs;
     // localparam SEG_X1 = 4'b0000;
@@ -56,10 +56,14 @@ module DebugMode(
     wire [31:0] x1_2;
     wire [31:0] x3_4;
     wire [31:0] x5;
+    wire [31:0] x6;
+    wire [31:0] x9;
+    wire [31:0] x18;
     wire [31:0] dbg_ifid_instruction;
     wire [31:0] dbg_if_pc;
     wire [31:0] dbg_ex_operand_a;
     wire [31:0] dbg_ex_operand_b;
+    wire flush_idex;
     wire [31:0] dbg_idex_rs1;
     wire [31:0] dbg_idex_rs2;
     wire [31:0] dbg_ex_whether_jump;
@@ -87,10 +91,14 @@ module DebugMode(
         .x3(x3),
         .x4(x4),
         .x5(x5),
+        .x6(x6),
+        .x9(x9),
+        .x18(x18),
         .dbg_ifid_instruction(dbg_ifid_instruction),
         .dbg_if_pc(dbg_if_pc),
         .dbg_ex_operand_a(dbg_ex_operand_a),
         .dbg_ex_operand_b(dbg_ex_operand_b),
+        .dbg_flush_idex(flush_idex),
         .dbg_idex_rs1(dbg_idex_rs1),
         .dbg_idex_rs2(dbg_idex_rs2),
         .dbg_ex_whether_jump(dbg_ex_whether_jump),
@@ -102,12 +110,12 @@ module DebugMode(
         .debugMode(1'b0),
         .testScenario(32'b0),
         .switch_in(switch_in), 
-        .led_out(led_test), 
+        .led_out(led), 
         .seg_physical_out(write_data_to_seg)
     );
 
-    assign led[7:0] = led_test[15:8];
-    assign led[15:8] = led_test[7:0]; 
+    // assign led[7:0] = led_test[15:8];
+    // assign led[15:8] = led_test[7:0]; 
 
 
 
@@ -120,7 +128,9 @@ module DebugMode(
         .x5(x5),
         .ifid_instruction(dbg_ifid_instruction),
         .datahazard_detect_stall_pc_ifid_idexnop(control_signal), 
-
+        .ex_operand_a(dbg_ex_operand_a),
+        .ex_operand_b(dbg_ex_operand_b),
+        .flush_idex(flush_idex),
         .clk_count(dbg_clk_count), //Ê±ÖÓ¼ÆÊýÆ÷
         .segOut(segOut)
     );
@@ -140,13 +150,7 @@ module DebugMode(
     //button to switch state
     wire button0;
 
-    // DebugClkGenerator debug_clk_gen(
-    //     .clk(clk),
-    //     .reset(reset),
-    //     .button(button[4]),
-    //     .dbg_clk(debug_clk)
-    // );
-    assign debug_clk = switch_in[15];
+
 
 
   clk_wiz_0 instance_name
@@ -156,27 +160,18 @@ module DebugMode(
    // Clock in ports
     .clk_in1(clk));      // input clk_in1
 
-//     module Counter(
-// input clk,
-// input rst,
-// input enable,
-// input reverse,//
-// input [31:0] start,
-// output reg [6:0]seconds,
-// output reg [6:0]minutes,
-// output reg [5:0]hours
-//     );
-//      integer timer_cnt;
+    // assign debug_clk = switch_in[15];
 
-//   clk_wiz_0 instance_name
-//    (
-//     // Clock out ports
-//     .clk_out1(clkout),     // output clk_out1
-//     // Status and control signals
-//     .reset(reset), // input reset
-//    // Clock in ports
-//     .clk_in1(clk));   
 
-        
+    debounce debounce_inst (
+        .clk(clk),
+        .run_stop(1'b1),
+        .key_in(button[4]),
+        .key_out(debug_clk)
+    );
+
+
+
+
 
 endmodule

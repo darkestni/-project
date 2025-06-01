@@ -11,12 +11,12 @@ module IFetch (
     input [31:0] testScenario,
 
     // --- to IF/ID Pipe Reg ---
-    output wire [31:0] bram_instruction_data, // 获取到的指令
+    output wire [31:0] instruction_data, // 获取到的指令
     output reg [31:0] pc_current_to_ifid  // 与指令配对的当前PC
    
 );
 
-    // wire [31:0] bram_instruction_data; // 指令ROM输出的指令数据
+    wire [31:0] bram_instruction_data; // 指令ROM输出的指令数据
     parameter RESET_PC = 32'h00000000;
     reg [31:0] pc; // 当前PC
 
@@ -26,6 +26,7 @@ module IFetch (
         .addra(pc[15:2]),    
         .douta(bram_instruction_data)
     );
+    assign instruction_data = reset? 32'b0: bram_instruction_data;
 
 
 
@@ -42,20 +43,22 @@ module IFetch (
         end else if (~stall_if) begin
             // 选择下一条PC：分支 or 顺序 +4
             if (branch) begin
-                pc <= target_pc_in_if + 4;
+                pc <= target_pc_in_if +4;
+                pc_current_to_ifid <= target_pc_in_if;
             end else begin
                 if (pc >= 32'hFFFFFF00) begin
                     pc <= pc;
                 end else begin
                     // pc <= pc + 4; // 直接加4
                     // pc <= pc + 4; // 直接加4
-                    // instruction_to_ifid <= bram_instruction_data;
+                    // instruction_data <= bram_instruction_data;
                 pc <= pc + 4;
                 end
+                pc_current_to_ifid <= pc;
+
             end
 
             // instruction_to_ifid <= bram_instruction_data;
-            pc_current_to_ifid <= pc;
         end else begin
             // stall 时不更新 PC 和输出（保持输出不变）
             // instruction_to_ifid <= instruction_to_ifid;  //时钟上升沿时读取指令

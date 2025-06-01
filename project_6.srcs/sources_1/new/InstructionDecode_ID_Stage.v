@@ -25,11 +25,15 @@ module InstructionDecode_ID_Stage (
 
 
     //for test
+    output [31:0] x0,
     output [31:0] x1,
     output [31:0] x2,
     output [31:0] x3,
     output [31:0] x4,
     output [31:0] x5,
+    output [31:0] x6,
+    output [31:0] x9,
+    output [31:0] x18,
 
     output wire [2:0] funct3_w, // funct3可能被Controller_ID使用
     output wire [6:0] funct7_w, // funct7可能被Controller_ID使用
@@ -101,11 +105,15 @@ module InstructionDecode_ID_Stage (
         .write_data_wb(write_data_from_wb),
         .read_data1_id(rdata1_to_ex),
         //for test
+        .x0(x0),
         .x1(x1),
         .x2(x2),
         .x3(x3),
         .x4(x4),
         .x5(x5),
+        .x6(x6),
+        .x9(x9),
+        .x18(x18),
         .read_data2_id(rdata2_to_ex)
     );
 

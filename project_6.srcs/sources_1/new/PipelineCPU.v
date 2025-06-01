@@ -3,15 +3,20 @@ module PipelineCPU (
     input reset,
 
     //for test (existing)
+    output wire [31:0] x0,
     output wire [31:0] x1,
     output wire [31:0] x2,
     output wire [31:0] x3,
     output wire [31:0] x4,
     output wire [31:0] x5,
+    output wire [31:0] x6,
+    output wire [31:0] x9,
+    output wire [31:0] x18,
     output wire [31:0] dbg_ifid_instruction,
     output wire [31:0] dbg_if_pc,
     output wire [31:0] dbg_ex_operand_a,
     output wire [31:0] dbg_ex_operand_b,
+    output wire dbg_flush_idex,
     output wire [4:0]  dbg_idex_rs1,
     output wire [4:0]  dbg_idex_rs2,
     output wire [31:0] dbg_ex_whether_jump,
@@ -69,7 +74,7 @@ module PipelineCPU (
         .stall_if(stall_if),
         .debugMode(debugMode[0]), // Assuming debugMode[0] controls IFetch's debugMode
         .testScenario(testScenario),
-        .bram_instruction_data(instruction_to_ifid),
+        .instruction_data(instruction_to_ifid),
         .pc_current_to_ifid(pc_current_to_ifid)
     );
 
@@ -122,7 +127,9 @@ module PipelineCPU (
         .reg_write_enable_from_wb(reg_write_enable_from_wb),
         .write_addr_from_wb(write_addr_from_wb),
         .write_data_from_wb(write_data_from_wb),
+        .x0(x0),
         .x1(x1), .x2(x2), .x3(x3), .x4(x4), .x5(x5), // Test outputs
+        .x6(x6), .x9(x9), .x18(x18),
         .rdata1_to_ex(rdata1_to_ex),
         .rdata2_to_ex(rdata2_to_ex),
         .imm32_to_ex(imm32_to_ex),
@@ -167,12 +174,26 @@ module PipelineCPU (
 
     wire flush_idex;
     assign flush_idex = idex_nop || branch; // Flush if hazard detected or branch taken
+    assign dbg_flush_idex = flush_idex;
+
+
+    // wire flush_idex;
+    // assign flush_idex = idex_nop; // Flush if hazard detected or branch taken
+    // assign dbg_flush_idex = flush_idex;
+
+    // reg flush_idex_r;
+    // always @(posedge clk) begin
+    // flush_idex_r <= branch; // 等效于 flush 延迟一拍
+    // end
+
+
 
     IDEX_PipelineRegister u_idex_reg (
         .clk(clk),
         .reset(reset),
         .enable_write(idex_enable_write),
         .flush_idex(flush_idex),
+        // .flush_idex(flush_idex || flush_idex_r),
         .rdata1_from_id(rdata1_to_ex),
         .rdata2_from_id(rdata2_to_ex),
         .imm32_from_id(imm32_to_ex),
