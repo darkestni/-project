@@ -21,20 +21,26 @@
 
 
 module CPU(
-input  clk,
-input  rst,
+input  fpga_clk,
+input  fpga_rst,
 input  [15:0] switch_in,    // ????????IO??
 output [15:0] led_out,       // LED ?????IO??
 output [7:0] seg_data,      // ????????
 output [7:0] seg_data2,
-output [7:0] seg_cs
+output [7:0] seg_cs,
+input start_pg,
+input rx,
+output tx
 
 );
-//    wire \[2:0]  caseId;      // ??????????3λ??
-//    wire \[7:0]  dataIn;      // ???????????8λ??
+wire clk_out1;
+wire clk_out2;
+cpuclk u_cpu_clk(
+            .clk_in1(fpga_clk),
+            .clk_out1(clk_out1),
+            .clk_out2(clk_out2)
+        );
 
-//    assign caseId = switchIn\[10:8];
-//    assign dataIn = switchIn\[7:0];
 wire [31:0] inst;
 wire [31:0] imm32;
 wire [4:0]  rs1;
@@ -67,9 +73,27 @@ wire is_jal_jalr;     // 标识jal/jalr指令
 wire [31:0] m_wdata;
 wire led_ctrl,sw_ctrl,number_ctrl;
 reg [31:0] registers[0:31];  
-
+// UART Programmer Pinouts
+wire upg_clk, upg_clk_o;
+wire upg_wen_o; //Uart write out enable
+wire upg_done_o; //Uart rx data have done
+//data to which memory unit of program_rom/dmemory32
+wire [14:0] upg_adr_o;
+//data to program_rom or dmemory32
+wire [31:0] upg_dat_o;
+wire spg_bufg;
+BUFG U1(.I(start_pg), .O(spg_bufg)); // de-twitter
+// Generate UART Programmer reset signal
+reg upg_rst;
+always @ (posedge fpga_clk) begin
+    if (fpga_rst) upg_rst <= 1;
+    if (spg_bufg) upg_rst <= 0;
+end
+//used for other modules which don't relate to UART
+wire rst;
+assign rst = fpga_rst | !upg_rst;
 IFetch u_IF (
-    .clk(clk),
+    .clk(clk_out1),
     .branch(branch),
     .zero(branch_taken),
     .jump(jump),
@@ -78,7 +102,13 @@ IFetch u_IF (
     .imm32(imm32),
     .reg_data(read_data1),
     .inst(inst),
-    .next_pc(next_pc)
+    .next_pc(next_pc),
+    .upg_clk_i(upg_clk_i),
+    .upg_wen_i(upg_wen_i),
+    .upg_rst_i(upg_rst_i),
+    .upg_adr_i(upg_adr_i),
+    .upg_dat_i(upg_dat_i),
+    .upg_done_i(upg_done_i)
 );
 
 Decoder u_Decoder (
@@ -120,7 +150,7 @@ wire [31:0] reg_write_data =
     is_jal_jalr ? next_pc :  // 优先返回地址
     (MemorIO_to_Reg ? mem_io_data : ALU_result);
 integer i;
-always @(posedge clk) begin
+always @(posedge clk_out1) begin
     if (rst) begin
         // ??λ?????????м?????0??????x0??
         for ( i = 0; i < 32; i = i + 1) begin
@@ -148,14 +178,20 @@ ALU u_ALU (
 );
 
 DMem u_DMem (
-    .clk(clk),
+    .clk(clk_out1),
     .MemRead(MemRead),
     .MemWrite(MemWrite),
     .mem_width(funct3[1:0]),
     .sign_ext(~funct3[2]),
     .addr(ALU_result),       
     .din(m_wdata), // ???MemOrIO???????д????
-    .dout(mem_out)
+    .dout(mem_out),
+    .upg_clk_i(upg_clk_i),
+    .upg_wen_i(upg_wen_i),
+    .upg_rst_i(upg_rst_i),
+    .upg_adr_i(upg_adr_i),
+    .upg_dat_i(upg_dat_i),
+    .upg_done_i(upg_done_i)
 );
 
 MemOrIO u_MemOrIO (
@@ -177,13 +213,22 @@ MemOrIO u_MemOrIO (
 assign led_out = IOWrite_led ? read_data2[15:0] : 16'b0;
     
 show_number show_inst (
-    .clk(clk),
+    .clk(clk_out1),
     .rst(rst),
     .data(IOWrite_seg ? m_wdata : 32'b0),
     .seg_data(seg_data),
     .seg_data2(seg_data2),
     .seg_cs(seg_cs)
             );
-
+ uart_bmpg_0 uart_prog (
+                   .upg_clk_i(fpga_clk),
+                   .upg_rst_i(upg_rst),
+                   .upg_rx_i(rx),
+                   .upg_tx_o(tx),
+                   .upg_adr_o(upg_adr_o),
+                   .upg_dat_o(upg_dat_o),
+                   .upg_wen_o(upg_wen_o),
+                   .upg_done_o(upg_done_o)
+               );
 
 endmodule
