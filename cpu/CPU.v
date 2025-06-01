@@ -213,24 +213,42 @@ MemOrIO u_MemOrIO (
 
 always @(negedge clk_out1) begin
     if (IOWrite_led ) begin
-        led_out = read_data2[15:0]; 
+        led_out[7:0] = read_data2[7:0]; 
+        
     end
 end
-
+wire [31:0] decimal_data;
 always @(negedge clk_out1) begin
     if (IOWrite_seg ) begin
-        seg_out = read_data2[31:0]; 
+        led_out[8]=read_data2[31];
+        seg_out = (switch_in[14]!=0)? decimal_data:read_data2; 
+        
     end
 end
 
-    
+
+
+
+bin_to_decimal tst(
+    .input_signal((read_data2[31]) ? -read_data2 : read_data2),
+    .to_decimal(switch_in[14]),
+    .output_decimal(decimal_data)
+    );
+ wire [31:0] clk_count;   
 show_number show_inst (
     .clk(clk),
     .rst(rst),
-    .data( seg_out[31:0] ),
+    .data( switch_in[15]? clk_count:seg_out[31:0] ),
     .seg_data(seg_data),
     .seg_data2(seg_data2),
     .seg_cs(seg_cs)
+            );
+
+ClockCount u_clk_count (
+                .clk(clk),
+                .reset(!rst),
+                .count_on(led_out[0]),
+                .clk_count(clk_count)
             );
 // uart_bmpg_0 uart_prog (
 //                   .upg_clk_i(clk_out2),
