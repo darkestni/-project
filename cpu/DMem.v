@@ -5,12 +5,24 @@ module DMem(
     input sign_ext, // 1:sign  0:0
     input [31:0] addr,
     input [31:0] din, 
-    output reg [31:0] dout
+    output reg [31:0] dout,
+    
+   input upg_clk_i,         // UART编程时钟
+   input upg_wen_i,       // UART写使能
+   input upg_rst_i,
+   input [13:0] upg_adr_i, // UART编程地址
+   input [31:0] upg_dat_i,  // UART编程数据
+   input upg_done_i
 );
     wire [3:0]  byte_sel;
     wire [31:0] ram_dout; 
-    RAM udram(.clka(!clk), .wea(MemWrite ? byte_sel : 4'b0), .addra(addr[15:2]), .dina(din), .douta(ram_dout));
-    
+
+    wire ram_clk = !clk;   
+    /* CPU work on normal mode when kickOff is 1.
+    CPU work on Uart communicate mode when kickOff is 0.*/
+    wire kickOff = upg_rst_i | (~upg_rst_i & upg_done_i);
+    // RAM udram(.clka(!clk), .wea(MemWrite ? byte_sel : 4'b0), .addra(addr[15:2]), .dina(din), .douta(ram_dout));
+    RAM udram(.clka(kickOff? ram_clk : upg_clk_i), .wea(kickOff ? (MemWrite ? byte_sel : 4'b0) : upg_wen_i), .addra(kickOff ? addr[15:2] : upg_adr_i), .dina(kickOff ? din: upg_dat_i), .douta(ram_dout));
     assign byte_sel = 
         (mem_width == 2'b10) ? 4'b1111 :
         (mem_width == 2'b01) ? 

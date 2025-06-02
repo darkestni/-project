@@ -16,24 +16,7 @@ module SegOutMUX(
 always @(*) begin
     if (debugOn) begin
     case (debugMode)
-        // 4'b0000: segOut = x1;
-        // 4'b0001: segOut = x2;
-        // 4'b0010: segOut = x3;
-        // 4'b0011: segOut = x4;
-        // 4'b0100: segOut = x5;
-        // 4'b0101: segOut = ifid_instruction;
-        // // 4'b0110: segOut = if_pc;
-        // 4'b0110: segOut = clk_count; //时钟计数器
-        // 4'b0111: segOut = ex_operand_a;
-        // 4'b1000: segOut = ex_operand_b;
-        // 4'b1001: segOut = idex_rs1;
-        // 4'b1010: segOut = idex_rs2;
-        // 4'b1011: segOut = ex_whether_jump;
-        // 4'b1100: segOut = idex_jump_target;
-        // 4'b1101: segOut = forward_a_b_ex; //左1是forwardA 左2是forwardB
-        // 4'b1110: segOut = datahazard_detect_stall_pc_ifid_idexnop; //数码管左1是stall_if 左2是ifid_stall 左3是idex_nop
-        // 4'b1111: segOut = write_data_to_seg; //时钟计数器
-        // default: segOut = write_data_to_seg; //默认输出
+
         3'b000: segOut = x1_2;
         3'b001: segOut = x3_4;
         // 3'b001: segOut = 32'h12435678;

@@ -19,7 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
+//FROM DIGITAL LOGIC PROJECT
 module debounce(
  input clk,        
 input run_stop,     // Control whether the module is running (1'b1 is running)

@@ -16,23 +16,7 @@ module DebugMode(
     // assign clkin = clk;
     wire clkout;
     assign tub_control = seg_cs;
-    // localparam SEG_X1 = 4'b0000;
-    // localparam SEG_X2 = 4'b0001;
-    // localparam SEG_X3 = 4'b0010;
-    // localparam SEG_X4 = 4'b0011;
-    // localparam SEG_X5 = 4'b0100;
-    // localparam SEG_IFID_INSTRUCTION = 4'b0101;
-    // localparam SEG_IF_PC = 4'b0110;
-    // localparam SEG_EX_OPERATE1 = 4'b0111;
-    // localparam SEG_EX_OPERATE2 = 4'b1000;
-    // localparam SEG_IDEX_RS1_ADDR = 4'b1001;
-    // localparam SEG_IDEX_RS2_ADDR = 4'b1010;
-    // localparam SEG_EX_WHETHER_JUMP = 4'b1011;
-    // localparam SEG_IDEX_JUMP_TARGET = 4'b1100;
-    // localparam SEG_FORWARD_A_B_EX = 4'b1101; //左1是forwardA 左2是forwardB
-    // localparam SEG_DATAHAZARD_DETECT_STALL_PC_IFID_IDEXNOP = 4'b1110;//数码管左1是stall_if 左2是ifid_stall 左3是idex_nop
-    // localparam SEG_CLK_COUNT = 4'b1111; //时钟计数器
-    // localparam SEG_CPU_OUT = 4'b1111;
+
     localparam SEG_X1_2 = 3'b000; //左4 x1 右4 x2
     localparam SEG_X3_4 = 3'b001; //左4 x3 右4 x4
     localparam SEG_X5 = 3'b010; //x5

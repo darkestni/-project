@@ -43,7 +43,7 @@ module IFetch (
         end else if (~stall_if) begin
             // 选择下一条PC：分支 or 顺序 +4
             if (branch) begin
-                pc <= target_pc_in_if +4;
+                pc <= target_pc_in_if + 4 ;
                 pc_current_to_ifid <= target_pc_in_if;
             end else begin
                 if (pc >= 32'hFFFFFF00) begin

@@ -71,7 +71,21 @@ module show_number(
        default:dis_data=4'hf;
        endcase
        end
-
+//    always @(negedge clk) begin
+//           if (IOWrite_seg ) begin
+//               case(seg_cs)
+//                  8'b00000001:dis_data=data[3:0];
+//                  8'b00000010:dis_data=data[7:4];
+//                  8'b00000100:dis_data=data[11:8];
+//                  8'b00001000:dis_data=data[15:12];
+//                  8'b00010000:dis_data=data[19:16];
+//                  8'b00100000:dis_data=data[23:20];
+//                  8'b01000000:dis_data=data[27:24];
+//                  8'b10000000:dis_data=data[31:28];
+//                  default:dis_data=4'hf;
+//                  endcase
+//           end
+//       end
    // reg [7:0] seg_data; 
    always @(dis_data )
        begin

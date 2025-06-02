@@ -20,17 +20,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-// module DMem(
-//     input clk,
-//     input MemRead,MemWrite,
-//     input [31:0] addr,
-//     input [31:0] din, 
-//     output[31:0] dout
-// );
-//     wire [31:0] from_dmem;
-//     assign dout = MemRead ? from_dmem : 32'b0;
-//     RAM udram(.clka(clk), .wea(MemWrite), .addra(addr[13:0]), .dina(din), .douta(from_dmem));
-
 
 // endmodule
 

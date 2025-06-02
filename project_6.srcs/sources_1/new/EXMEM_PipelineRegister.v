@@ -1,12 +1,4 @@
-//==============================================================================
-// Module: EXMEM_PipelineRegister
-// Author: [Your Name]
-// Date: [Current Date]
-// Description:
-//     EX/MEM 流水线寄存器。
-//     在执行(EX)阶段和访存(MEM)阶段之间锁存数据和控制信号。
-//     支持复位、冲刷和写使能控制。
-//==============================================================================
+
 module EXMEM_PipelineRegister (
     input clk,
     input reset,
